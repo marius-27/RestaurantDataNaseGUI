@@ -1,0 +1,99 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:RestaurantDataNaseGUI.ViewModels"
+             xmlns:dtos="using:RestaurantDataNaseGUI.Models.DTOs"
+             xmlns:conv="using:Avalonia.Data.Converters"
+             xmlns:convLocal="using:RestaurantDataNaseGUI.Converters"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="700"
+             x:Class="RestaurantDataNaseGUI.Views.MenuView"
+             x:Name="Root"
+             x:DataType="vm:MenuViewModel">
+
+    <Design.DataContext>
+        <!-- Doar pentru previzualizare in IDE. -->
+        <vm:MenuViewModel/>
+    </Design.DataContext>
+
+    <Grid RowDefinitions="Auto,*">
+        <Border Grid.Row="0" Padding="16,12">
+            <StackPanel Orientation="Horizontal" Spacing="12">
+                <TextBlock Text="Meniul restaurantului" FontSize="22" FontWeight="Bold" VerticalAlignment="Center"/>
+                <TextBlock Text="Se incarca..." IsVisible="{Binding EsteInCurs}" VerticalAlignment="Center" Opacity="0.7"/>
+                <TextBlock Text="{Binding MesajEroare}"
+                           Foreground="Red"
+                           VerticalAlignment="Center"
+                           IsVisible="{Binding MesajEroare, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}"/>
+            </StackPanel>
+        </Border>
+
+        <ScrollViewer Grid.Row="1">
+            <ItemsControl ItemsSource="{Binding Categorii}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:CategorieGrupataViewModel">
+                        <StackPanel Margin="16,8" Spacing="8">
+                            <TextBlock Text="{Binding Denumire}" FontSize="18" FontWeight="SemiBold"/>
+
+                            <ItemsControl ItemsSource="{Binding Itemi}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="dtos:MeniuAfisareDto">
+                                        <Border Width="220" Margin="6" Padding="10" CornerRadius="6"
+                                                BorderBrush="#33808080" BorderThickness="1">
+                                            <StackPanel Spacing="6">
+                                                <Grid Height="100">
+                                                    <Image Source="{Binding PrimaImaginePath, Converter={x:Static convLocal:CaleImagineToBitmapConverter.Instance}}"
+                                                           IsVisible="{Binding PrimaImaginePath, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}"
+                                                           Stretch="UniformToFill"/>
+                                                    <Border Background="#22808080"
+                                                            CornerRadius="4"
+                                                            IsVisible="{Binding PrimaImaginePath, Converter={x:Static conv:StringConverters.IsNullOrEmpty}}">
+                                                        <TextBlock Text="Fara imagine"
+                                                                   HorizontalAlignment="Center"
+                                                                   VerticalAlignment="Center"
+                                                                   Opacity="0.6"
+                                                                   FontSize="11"/>
+                                                    </Border>
+                                                </Grid>
+
+                                                <TextBlock Text="{Binding Denumire}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+
+                                                <TextBlock Text="Meniu compus"
+                                                           IsVisible="{Binding EsteMeniuCompus}"
+                                                           FontStyle="Italic" FontSize="11" Opacity="0.7"/>
+
+                                                <TextBlock Text="{Binding Pret, StringFormat='{}{0:0.00} lei'}"/>
+
+                                                <TextBlock Text="{Binding CantitateText}"
+                                                           IsVisible="{Binding CantitateText, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}"
+                                                           FontSize="12" Opacity="0.8"/>
+
+                                                <TextBlock Text="{Binding AlergeniText}"
+                                                           FontSize="11" TextWrapping="Wrap" Opacity="0.7"/>
+
+                                                <TextBlock Text="Indisponibil"
+                                                           IsVisible="{Binding EsteIndisponibil}"
+                                                           Foreground="Red" FontWeight="Bold" FontSize="12"/>
+
+                                                <Button Content="Comanda"
+                                                        IsVisible="{Binding DataContext.PoateComanda, ElementName=Root}"
+                                                        IsEnabled="{Binding !EsteIndisponibil}"
+                                                        HorizontalAlignment="Stretch"
+                                                        HorizontalContentAlignment="Center"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+    </Grid>
+</UserControl>
