@@ -1,0 +1,79 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:RestaurantDataNaseGUI.ViewModels"
+             xmlns:conv="using:Avalonia.Data.Converters"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="700"
+             x:Class="RestaurantDataNaseGUI.Views.SearchView"
+             x:Name="Root"
+             x:DataType="vm:SearchViewModel">
+
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://RestaurantDataNaseGUI/Views/Resources/MenuTemplates.axaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <Design.DataContext>
+        <!-- Doar pentru previzualizare in IDE. -->
+        <vm:SearchViewModel/>
+    </Design.DataContext>
+
+    <Grid RowDefinitions="Auto,*">
+        <Border Grid.Row="0" Padding="16,12">
+            <StackPanel Spacing="10">
+                <TextBlock Text="Cauta in meniu" FontSize="22" FontWeight="Bold"/>
+
+                <StackPanel Orientation="Horizontal" Spacing="16">
+                    <RadioButton GroupName="TipCautare"
+                                 Content="Dupa denumire"
+                                 IsChecked="{Binding EsteCautareDupaDenumire, Mode=TwoWay}"/>
+                    <RadioButton GroupName="TipCautare"
+                                 Content="Dupa alergen"
+                                 IsChecked="{Binding EsteCautareDupaAlergen, Mode=TwoWay}"/>
+                </StackPanel>
+
+                <TextBox Text="{Binding CuvantCheie, Mode=TwoWay}"
+                         PlaceholderText="Cauta dupa denumire..."
+                         IsVisible="{Binding EsteCautareDupaDenumire}"/>
+
+                <StackPanel Spacing="10" IsVisible="{Binding EsteCautareDupaAlergen}">
+                    <ComboBox ItemsSource="{Binding AlergeniDisponibili}"
+                              SelectedItem="{Binding AlergenSelectat, Mode=TwoWay}"
+                              PlaceholderText="Alege un alergen"
+                              HorizontalAlignment="Stretch"/>
+
+                    <StackPanel Orientation="Horizontal" Spacing="16">
+                        <RadioButton GroupName="ContineAlergen"
+                                     Content="Contine alergenul"
+                                     IsChecked="{Binding ContineAlergen, Mode=TwoWay}"/>
+                        <RadioButton GroupName="ContineAlergen"
+                                     Content="Nu contine alergenul"
+                                     IsChecked="{Binding NuContineAlergen, Mode=TwoWay}"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                    <Button Content="Cauta" Command="{Binding CautaCommand}"/>
+                    <TextBlock Text="Se cauta..." IsVisible="{Binding EsteInCurs}" VerticalAlignment="Center" Opacity="0.7"/>
+                </StackPanel>
+
+                <TextBlock Text="{Binding MesajEroare}"
+                           Foreground="Red"
+                           IsVisible="{Binding MesajEroare, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}"/>
+
+                <TextBlock Text="{Binding MesajNimicGasit}"
+                           Opacity="0.7"
+                           IsVisible="{Binding MesajNimicGasit, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}"/>
+            </StackPanel>
+        </Border>
+
+        <ScrollViewer Grid.Row="1">
+            <ItemsControl ItemsSource="{Binding RezultateCautare}"
+                          ItemTemplate="{StaticResource CategorieGrupataTemplate}"/>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

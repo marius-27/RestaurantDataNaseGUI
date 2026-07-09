@@ -46,5 +46,11 @@ build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
 [/home/mmarius/Documents/Programming/C\#/RestaurantDataNaseGUI/RestaurantDataNaseGUI/Views/RegisterView.axaml]
 build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
 
+[/home/mmarius/Documents/Programming/C\#/RestaurantDataNaseGUI/RestaurantDataNaseGUI/Views/Resources/MenuTemplates.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[/home/mmarius/Documents/Programming/C\#/RestaurantDataNaseGUI/RestaurantDataNaseGUI/Views/SearchView.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
 [/home/mmarius/Documents/Programming/C\#/RestaurantDataNaseGUI/RestaurantDataNaseGUI/Assets/avalonia-logo.ico]
 build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaResource

@@ -1,22 +1,25 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using RestaurantDataNaseGUI.Data;
+using RestaurantDataNaseGUI.Models;
 using RestaurantDataNaseGUI.Models.DTOs;
 
 namespace RestaurantDataNaseGUI.Services;
 
 /// <summary>
-/// Implementare IMenuService. Preparatele individuale se citesc direct prin
-/// EF Core LINQ (parametrizat automat). Meniurile compuse se citesc prin
-/// StoredProcedureRepository.GetMeniuRestaurantCuAlergeniAsync (procedura
-/// stocata dbo.sp_GetMeniuRestaurantCuAlergeni), care da pretul calculat
-/// dinamic (dbo.fn_CalculeazaPretMeniu) si alergenii agregati din toate
-/// preparatele componente; procedura nu returneaza si disponibilitatea, asa
-/// ca aceasta se calculeaza separat printr-o interogare LINQ.
+/// Implementare IMenuService. Preparatele individuale se citesc/filtreaza
+/// direct prin EF Core LINQ (parametrizat automat de provider). Meniurile
+/// compuse se citesc prin StoredProcedureRepository.GetMeniuRestaurantCuAlergeniAsync
+/// (procedura stocata dbo.sp_GetMeniuRestaurantCuAlergeni), care da pretul
+/// calculat dinamic (dbo.fn_CalculeazaPretMeniu) si alergenii agregati din
+/// toate preparatele componente; procedura nu are parametri de filtrare, deci
+/// cautarea pe meniuri se aplica in memorie, dupa materializare - nu prin
+/// concatenare de SQL.
 /// </summary>
 public class MenuService : IMenuService
 {
@@ -37,8 +40,78 @@ public class MenuService : IMenuService
         var preparate = await GetPreparateAsync(context, cancellationToken);
         var meniuri = await GetMeniuriAsync(context, repository, cancellationToken);
 
-        return preparate
-            .Concat(meniuri)
+        return GrupeazaPeCategorii(preparate.Concat(meniuri));
+    }
+
+    public async Task<List<CategorieMeniuDto>> CautaDupaDenumireAsync(
+        string cuvantCheie,
+        CancellationToken cancellationToken = default)
+    {
+        cuvantCheie = (cuvantCheie ?? string.Empty).Trim();
+        if (cuvantCheie.Length == 0)
+        {
+            return await GetMeniuRestaurantAsync(cancellationToken);
+        }
+
+        await using var context = _dbContextFactory();
+        var repository = new StoredProcedureRepository(context);
+
+        var cuvantCheieLower = cuvantCheie.ToLower();
+
+        var preparate = await GetPreparateAsync(
+            context,
+            cancellationToken,
+            p => p.Denumire.ToLower().Contains(cuvantCheieLower));
+
+        var meniuri = await GetMeniuriAsync(context, repository, cancellationToken);
+        var meniuriFiltrate = meniuri.Where(
+            m => m.Denumire.Contains(cuvantCheie, StringComparison.OrdinalIgnoreCase));
+
+        return GrupeazaPeCategorii(preparate.Concat(meniuriFiltrate));
+    }
+
+    public async Task<List<CategorieMeniuDto>> CautaDupaAlergenAsync(
+        string numeAlergen,
+        bool contineAlergen,
+        CancellationToken cancellationToken = default)
+    {
+        numeAlergen = (numeAlergen ?? string.Empty).Trim();
+        if (numeAlergen.Length == 0)
+        {
+            return new List<CategorieMeniuDto>();
+        }
+
+        await using var context = _dbContextFactory();
+        var repository = new StoredProcedureRepository(context);
+
+        var numeAlergenLower = numeAlergen.ToLower();
+
+        Expression<Func<Preparat, bool>> filtruPreparate = contineAlergen
+            ? p => p.PreparatAlergeni.Any(pa => pa.Alergen.Denumire.ToLower() == numeAlergenLower)
+            : p => !p.PreparatAlergeni.Any(pa => pa.Alergen.Denumire.ToLower() == numeAlergenLower);
+
+        var preparate = await GetPreparateAsync(context, cancellationToken, filtruPreparate);
+
+        var meniuri = await GetMeniuriAsync(context, repository, cancellationToken);
+        var meniuriFiltrate = meniuri.Where(m =>
+            m.ListaAlergeni.Any(a => a.Equals(numeAlergen, StringComparison.OrdinalIgnoreCase)) == contineAlergen);
+
+        return GrupeazaPeCategorii(preparate.Concat(meniuriFiltrate));
+    }
+
+    public async Task<List<string>> GetAlergeniDisponibiliAsync(CancellationToken cancellationToken = default)
+    {
+        await using var context = _dbContextFactory();
+
+        return await context.Alergeni
+            .OrderBy(a => a.Denumire)
+            .Select(a => a.Denumire)
+            .ToListAsync(cancellationToken);
+    }
+
+    private static List<CategorieMeniuDto> GrupeazaPeCategorii(IEnumerable<MeniuAfisareDto> itemi)
+    {
+        return itemi
             .GroupBy(item => item.Categorie, StringComparer.CurrentCultureIgnoreCase)
             .OrderBy(grup => grup.Key, StringComparer.CurrentCultureIgnoreCase)
             .Select(grup => new CategorieMeniuDto
@@ -51,13 +124,20 @@ public class MenuService : IMenuService
 
     private static async Task<List<MeniuAfisareDto>> GetPreparateAsync(
         RestaurantDbContext context,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        Expression<Func<Preparat, bool>>? filtru = null)
     {
-        var preparate = await context.Preparate
+        IQueryable<Preparat> query = context.Preparate
             .Include(p => p.Categorie)
             .Include(p => p.PreparatAlergeni).ThenInclude(pa => pa.Alergen)
-            .Include(p => p.Imagini)
-            .ToListAsync(cancellationToken);
+            .Include(p => p.Imagini);
+
+        if (filtru is not null)
+        {
+            query = query.Where(filtru);
+        }
+
+        var preparate = await query.ToListAsync(cancellationToken);
 
         return preparate
             .Select(p => new MeniuAfisareDto
