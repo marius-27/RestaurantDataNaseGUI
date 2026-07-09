@@ -1,0 +1,59 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:RestaurantDataNaseGUI.ViewModels.Admin"
+             xmlns:models="using:RestaurantDataNaseGUI.Models"
+             xmlns:conv="using:Avalonia.Data.Converters"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="500"
+             x:Class="RestaurantDataNaseGUI.Views.Admin.AlergenAdminView"
+             x:Name="Root"
+             x:DataType="vm:AlergenAdminViewModel">
+
+    <Design.DataContext>
+        <!-- Doar pentru previzualizare in IDE. -->
+        <vm:AlergenAdminViewModel/>
+    </Design.DataContext>
+
+    <Grid RowDefinitions="Auto,Auto,*" Margin="16">
+        <TextBlock Grid.Row="0" Text="Administrare alergeni" FontSize="22" FontWeight="Bold" Margin="0,0,0,12"/>
+
+        <Border Grid.Row="1" Padding="12" BorderBrush="#33808080" BorderThickness="1" CornerRadius="6" Margin="0,0,0,12">
+            <StackPanel Spacing="8">
+                <TextBlock Text="Editare alergen" IsVisible="{Binding EsteEditare}" FontWeight="SemiBold"/>
+                <TextBlock Text="Alergen nou" IsVisible="{Binding !EsteEditare}" FontWeight="SemiBold"/>
+
+                <TextBox Text="{Binding Denumire, Mode=TwoWay}" PlaceholderText="Denumire alergen"/>
+
+                <TextBlock Text="{Binding MesajEroare}" Foreground="Red" TextWrapping="Wrap"
+                           IsVisible="{Binding MesajEroare, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}"/>
+
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Button Content="Salveaza" Command="{Binding SalveazaCommand}"/>
+                    <Button Content="Anuleaza" Command="{Binding AnuleazaCommand}" IsVisible="{Binding EsteEditare}"/>
+                    <TextBlock Text="Se salveaza..." IsVisible="{Binding EsteInCurs}" VerticalAlignment="Center" Opacity="0.7"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <ScrollViewer Grid.Row="2">
+            <ItemsControl ItemsSource="{Binding Alergeni}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="models:Alergen">
+                        <Border Padding="10" Margin="0,4" BorderBrush="#22808080" BorderThickness="1" CornerRadius="6">
+                            <Grid ColumnDefinitions="*,Auto,Auto">
+                                <TextBlock Grid.Column="0" Text="{Binding Denumire}" VerticalAlignment="Center"/>
+                                <Button Grid.Column="1" Content="Editeaza" Margin="4,0"
+                                        Command="{Binding DataContext.SelecteazaPentruEditareCommand, ElementName=Root}"
+                                        CommandParameter="{Binding}"/>
+                                <Button Grid.Column="2" Content="Sterge"
+                                        Command="{Binding DataContext.StergeCommand, ElementName=Root}"
+                                        CommandParameter="{Binding}"/>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

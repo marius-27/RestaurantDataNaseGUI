@@ -34,6 +34,18 @@ build_property.EnableCodeStyleSeverity =
 [/home/mmarius/Documents/Programming/C\#/RestaurantDataNaseGUI/RestaurantDataNaseGUI/App.axaml]
 build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
 
+[/home/mmarius/Documents/Programming/C\#/RestaurantDataNaseGUI/RestaurantDataNaseGUI/Views/Admin/AlergenAdminView.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[/home/mmarius/Documents/Programming/C\#/RestaurantDataNaseGUI/RestaurantDataNaseGUI/Views/Admin/CategorieAdminView.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[/home/mmarius/Documents/Programming/C\#/RestaurantDataNaseGUI/RestaurantDataNaseGUI/Views/Admin/MeniuAdminView.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[/home/mmarius/Documents/Programming/C\#/RestaurantDataNaseGUI/RestaurantDataNaseGUI/Views/Admin/PreparatAdminView.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
 [/home/mmarius/Documents/Programming/C\#/RestaurantDataNaseGUI/RestaurantDataNaseGUI/Views/CartView.axaml]
 build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
 

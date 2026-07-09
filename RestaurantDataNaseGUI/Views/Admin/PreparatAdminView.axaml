@@ -1,0 +1,130 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:RestaurantDataNaseGUI.ViewModels.Admin"
+             xmlns:models="using:RestaurantDataNaseGUI.Models"
+             xmlns:conv="using:Avalonia.Data.Converters"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="720" d:DesignHeight="800"
+             x:Class="RestaurantDataNaseGUI.Views.Admin.PreparatAdminView"
+             x:Name="Root"
+             x:DataType="vm:PreparatAdminViewModel">
+
+    <Design.DataContext>
+        <!-- Doar pentru previzualizare in IDE. -->
+        <vm:PreparatAdminViewModel/>
+    </Design.DataContext>
+
+    <Grid ColumnDefinitions="380,*" Margin="16">
+        <ScrollViewer Grid.Column="0" Margin="0,0,12,0">
+            <StackPanel Spacing="8">
+                <TextBlock Text="Editare preparat" IsVisible="{Binding EsteEditare}" FontSize="18" FontWeight="Bold"/>
+                <TextBlock Text="Preparat nou" IsVisible="{Binding !EsteEditare}" FontSize="18" FontWeight="Bold"/>
+
+                <TextBlock Text="Denumire"/>
+                <TextBox Text="{Binding Denumire, Mode=TwoWay}"/>
+
+                <TextBlock Text="Categorie"/>
+                <ComboBox ItemsSource="{Binding CategoriiDisponibile}" SelectedItem="{Binding CategorieSelectata, Mode=TwoWay}" HorizontalAlignment="Stretch">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate x:DataType="models:Categorie">
+                            <TextBlock Text="{Binding Denumire}"/>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                    <StackPanel Grid.Column="0" Spacing="4">
+                        <TextBlock Text="Pret (lei)"/>
+                        <NumericUpDown Value="{Binding Pret, Mode=TwoWay}" Minimum="0" Increment="0.5" FormatString="0.00"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Spacing="4">
+                        <TextBlock Text="Cantitate/portie"/>
+                        <NumericUpDown Value="{Binding CantitatePortie, Mode=TwoWay}" Minimum="0" Increment="10" FormatString="0.##"/>
+                    </StackPanel>
+                </Grid>
+
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                    <StackPanel Grid.Column="0" Spacing="4">
+                        <TextBlock Text="Unitate masura"/>
+                        <TextBox Text="{Binding UnitateMasura, Mode=TwoWay}" PlaceholderText="g / ml / buc"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Spacing="4">
+                        <TextBlock Text="Stoc total"/>
+                        <NumericUpDown Value="{Binding CantitateTotalaRestaurant, Mode=TwoWay}" Minimum="0" Increment="10" FormatString="0.##"/>
+                    </StackPanel>
+                </Grid>
+
+                <CheckBox Content="Disponibil" IsChecked="{Binding Disponibil, Mode=TwoWay}"/>
+
+                <TextBlock Text="Alergeni" FontWeight="SemiBold" Margin="0,8,0,0"/>
+                <ItemsControl ItemsSource="{Binding AlergeniSelectabili}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:AlergenSelectabilViewModel">
+                            <CheckBox Content="{Binding Denumire}" IsChecked="{Binding EsteSelectat, Mode=TwoWay}" Margin="0,0,12,4"/>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <TextBlock Text="Imagini (cale fisier)" FontWeight="SemiBold" Margin="0,8,0,0"/>
+                <ItemsControl ItemsSource="{Binding ImaginiPaths}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="x:String">
+                            <Grid ColumnDefinitions="*,Auto" Margin="0,2">
+                                <TextBlock Grid.Column="0" Text="{Binding}" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                                <Button Grid.Column="1"
+                                        Content="Sterge"
+                                        Command="{Binding DataContext.StergeImagineCommand, ElementName=Root}"
+                                        CommandParameter="{Binding}"/>
+                            </Grid>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                    <TextBox Grid.Column="0" Text="{Binding CaleImagineNoua, Mode=TwoWay}" PlaceholderText="Assets/preparate/exemplu.png"/>
+                    <Button Grid.Column="1" Content="Adauga" Command="{Binding AdaugaImagineCommand}"/>
+                </Grid>
+
+                <TextBlock Text="{Binding MesajEroare}" Foreground="Red" TextWrapping="Wrap" Margin="0,8,0,0"
+                           IsVisible="{Binding MesajEroare, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}"/>
+
+                <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,8,0,0">
+                    <Button Content="Salveaza" Command="{Binding SalveazaCommand}"/>
+                    <Button Content="Anuleaza" Command="{Binding AnuleazaCommand}" IsVisible="{Binding EsteEditare}"/>
+                    <TextBlock Text="Se salveaza..." IsVisible="{Binding EsteInCurs}" VerticalAlignment="Center" Opacity="0.7"/>
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
+
+        <ScrollViewer Grid.Column="1">
+            <ItemsControl ItemsSource="{Binding Preparate}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="models:Preparat">
+                        <Border Padding="10" Margin="0,4" BorderBrush="#22808080" BorderThickness="1" CornerRadius="6">
+                            <Grid ColumnDefinitions="*,Auto,Auto">
+                                <StackPanel Grid.Column="0" Spacing="2">
+                                    <TextBlock Text="{Binding Denumire}" FontWeight="SemiBold"/>
+                                    <TextBlock Text="{Binding Categorie.Denumire}" FontSize="11" Opacity="0.7"/>
+                                    <TextBlock Text="{Binding Pret, StringFormat='{}{0:0.00} lei'}" FontSize="12"/>
+                                    <TextBlock Text="Indisponibil" IsVisible="{Binding !Disponibil}" Foreground="Red" FontSize="11" FontWeight="Bold"/>
+                                </StackPanel>
+                                <Button Grid.Column="1" Content="Editeaza" Margin="4,0" VerticalAlignment="Top"
+                                        Command="{Binding DataContext.SelecteazaPentruEditareCommand, ElementName=Root}"
+                                        CommandParameter="{Binding}"/>
+                                <Button Grid.Column="2" Content="Sterge" VerticalAlignment="Top"
+                                        Command="{Binding DataContext.StergeCommand, ElementName=Root}"
+                                        CommandParameter="{Binding}"/>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+    </Grid>
+</UserControl>
