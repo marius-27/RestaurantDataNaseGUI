@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using RestaurantDataNaseGUI.Data;
+using RestaurantDataNaseGUI.Models;
 using RestaurantDataNaseGUI.Models.DTOs;
 
 namespace RestaurantDataNaseGUI.Services;
@@ -25,9 +26,13 @@ namespace RestaurantDataNaseGUI.Services;
 /// 2. Cost transport CostTransport lei daca subtotalul e sub
 ///    PragTransportGratuit, altfel transport gratuit.
 ///
-/// Actualizarea stocului (StoredProcedureRepository.UpdateCantitateTotalaLaComandaAsync)
-/// NU se face aici - se face cand o comanda trece in starea "se pregateste",
-/// lucru care apartine modulului de angajat (pas viitor).
+/// Partea de angajat (vizualizare/schimbare stare comenzi) e in aceeasi
+/// clasa, nu intr-un serviciu separat: SchimbaStareComandaAsync verifica
+/// tranzitiile valide de stare (vezi TranzitiiValide) si, doar cand starea
+/// noua e "se pregateste", apeleaza
+/// StoredProcedureRepository.UpdateCantitateTotalaLaComandaAsync ca sa scada
+/// stocul - cerinta explicita ("la fiecare comanda pusa in pregatire se
+/// actualizeaza automat cantitatea totala din restaurant").
 /// </summary>
 public class OrderService : IOrderService
 {
@@ -36,6 +41,19 @@ public class OrderService : IOrderService
     {
         "livrata",
         "anulata",
+    };
+
+    /// <summary>
+    /// Tranzitiile valide de stare pentru o comanda: fluxul normal
+    /// inregistrata -> se pregateste -> a plecat la client -> livrata, plus
+    /// posibilitatea de a anula orice comanda activa. Orice alta tranzitie
+    /// (ex. direct din "inregistrata" in "livrata") e respinsa.
+    /// </summary>
+    private static readonly Dictionary<string, string[]> TranzitiiValide = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["inregistrata"] = new[] { "se pregateste", "anulata" },
+        ["se pregateste"] = new[] { "a plecat la client", "anulata" },
+        ["a plecat la client"] = new[] { "livrata", "anulata" },
     };
 
     private readonly ISessionService _sessionService;
@@ -219,6 +237,165 @@ public class OrderService : IOrderService
         await context.SaveChangesAsync(cancellationToken);
 
         return OrderResult.Ok(comanda.Id, comanda.CodUnic);
+    }
+
+    public async Task<List<ComandaAngajatDto>> GetToateComenzileAsync(CancellationToken cancellationToken = default)
+    {
+        VerificaEsteAngajatSauArunca();
+
+        await using var context = _dbContextFactory();
+
+        var comenzi = await context.Comenzi
+            .Include(c => c.Utilizator)
+            .Include(c => c.Stare)
+            .Include(c => c.ComandaDetalii).ThenInclude(cd => cd.Preparat)
+            .Include(c => c.ComandaDetalii).ThenInclude(cd => cd.Meniu)
+            .OrderByDescending(c => c.DataComanda)
+            .ToListAsync(cancellationToken);
+
+        return comenzi.Select(MapeazaComandaAngajat).ToList();
+    }
+
+    public async Task<List<ComandaAngajatDto>> GetComenziActiveAngajatAsync(CancellationToken cancellationToken = default)
+    {
+        var toateComenzile = await GetToateComenzileAsync(cancellationToken);
+        return toateComenzile.Where(c => c.EsteActiva).ToList();
+    }
+
+    public IReadOnlyList<string> GetStariUrmatoarePosibile(string stareCurenta)
+    {
+        return TranzitiiValide.TryGetValue(stareCurenta ?? string.Empty, out var stariUrmatoare)
+            ? stariUrmatoare
+            : Array.Empty<string>();
+    }
+
+    public async Task<OrderResult> SchimbaStareComandaAsync(
+        int comandaId,
+        string stareNoua,
+        CancellationToken cancellationToken = default)
+    {
+        if (!_sessionService.EsteAutentificat || !_sessionService.EsteAngajat)
+        {
+            return OrderResult.Esec("Doar angajatii autentificati pot schimba starea unei comenzi.");
+        }
+
+        stareNoua = (stareNoua ?? string.Empty).Trim();
+        if (string.IsNullOrWhiteSpace(stareNoua))
+        {
+            return OrderResult.Esec("Starea noua este obligatorie.");
+        }
+
+        await using var context = _dbContextFactory();
+
+        var comanda = await context.Comenzi
+            .Include(c => c.Stare)
+            .FirstOrDefaultAsync(c => c.Id == comandaId, cancellationToken);
+
+        if (comanda is null)
+        {
+            return OrderResult.Esec("Comanda specificata nu exista.");
+        }
+
+        var stareCurenta = comanda.Stare.Denumire;
+
+        if (StariFinale.Contains(stareCurenta))
+        {
+            return OrderResult.Esec($"Comanda este deja \"{stareCurenta}\" si nu isi mai poate schimba starea.");
+        }
+
+        var stariUrmatoarePosibile = GetStariUrmatoarePosibile(stareCurenta);
+        if (!stariUrmatoarePosibile.Any(s => string.Equals(s, stareNoua, StringComparison.OrdinalIgnoreCase)))
+        {
+            return OrderResult.Esec($"Nu se poate trece direct din starea \"{stareCurenta}\" in \"{stareNoua}\".");
+        }
+
+        var stareNouaEntitate = await context.StariComanda
+            .FirstOrDefaultAsync(s => s.Denumire == stareNoua, cancellationToken);
+
+        if (stareNouaEntitate is null)
+        {
+            return OrderResult.Esec($"Starea \"{stareNoua}\" nu exista in configurarea aplicatiei.");
+        }
+
+        await using var transaction = await context.Database.BeginTransactionAsync(cancellationToken);
+
+        try
+        {
+            comanda.StareId = stareNouaEntitate.Id;
+            await context.SaveChangesAsync(cancellationToken);
+
+            if (string.Equals(stareNoua, "se pregateste", StringComparison.OrdinalIgnoreCase))
+            {
+                // Cerinta explicita: la fiecare comanda pusa "in pregatire" se
+                // actualizeaza automat stocul. sp_UpdateCantitateTotalaLaComanda
+                // face propriul ROLLBACK + RAISERROR daca stocul e insuficient,
+                // ceea ce arunca aici o SqlException - prinsa mai jos, ea anuleaza
+                // si schimbarea de stare, ca cele doua sa ramana atomice.
+                var repository = new StoredProcedureRepository(context);
+                await repository.UpdateCantitateTotalaLaComandaAsync(comandaId, cancellationToken);
+            }
+
+            await transaction.CommitAsync(cancellationToken);
+            return OrderResult.Ok(comanda.Id, comanda.CodUnic);
+        }
+        catch (Exception)
+        {
+            try
+            {
+                await transaction.RollbackAsync(cancellationToken);
+            }
+            catch
+            {
+                // sp_UpdateCantitateTotalaLaComanda executa propriul ROLLBACK
+                // TRANSACTION cand stocul e insuficient, care poate incheia
+                // tranzactia la nivel de server inainte sa ajungem aici - un
+                // rollback "dublu" e sigur de ignorat, rezultatul dorit (nimic
+                // nu se salveaza) e deja garantat de ROLLBACK-ul din procedura.
+            }
+
+            return OrderResult.Esec(
+                "Schimbarea starii a esuat, probabil din cauza stocului insuficient pentru unul dintre preparate. Comanda a ramas in starea anterioara.");
+        }
+    }
+
+    private static ComandaAngajatDto MapeazaComandaAngajat(Comanda comanda)
+    {
+        var subtotalMancare = comanda.ComandaDetalii.Sum(cd => cd.Cantitate * cd.PretUnitarLaComanda);
+        var valoareDiscount = Math.Round(subtotalMancare * comanda.Discount / 100m, 2);
+
+        return new ComandaAngajatDto
+        {
+            ComandaId = comanda.Id,
+            CodUnic = comanda.CodUnic,
+            DataComanda = comanda.DataComanda,
+            Stare = comanda.Stare.Denumire,
+            CostTransport = comanda.CostTransport,
+            Discount = comanda.Discount,
+            OraEstimataLivrare = comanda.OraEstimataLivrare,
+            SubtotalMancare = subtotalMancare,
+            Total = subtotalMancare - valoareDiscount + comanda.CostTransport,
+            EsteActiva = !StariFinale.Contains(comanda.Stare.Denumire),
+            Articole = comanda.ComandaDetalii
+                .Select(cd => new ArticolComandaClientDto
+                {
+                    Denumire = cd.Preparat?.Denumire ?? cd.Meniu?.Denumire ?? string.Empty,
+                    Cantitate = cd.Cantitate,
+                    PretUnitar = cd.PretUnitarLaComanda,
+                })
+                .ToList(),
+            NumeClient = comanda.Utilizator.Nume,
+            PrenumeClient = comanda.Utilizator.Prenume,
+            TelefonClient = comanda.Utilizator.Telefon,
+            AdresaLivrareClient = comanda.Utilizator.AdresaLivrare,
+        };
+    }
+
+    private void VerificaEsteAngajatSauArunca()
+    {
+        if (!_sessionService.EsteAutentificat || !_sessionService.EsteAngajat)
+        {
+            throw new UnauthorizedAccessException("Aceasta actiune este permisa doar angajatilor autentificati.");
+        }
     }
 
     private static async Task<string?> VerificaDisponibilitateaAsync(

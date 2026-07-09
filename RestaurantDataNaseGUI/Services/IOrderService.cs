@@ -49,4 +49,37 @@ public interface IOrderService
         int comandaId,
         int utilizatorId,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Toate comenzile, ale tuturor clientilor, cu datele clientului incluse
+    /// - doar pentru angajati autentificati (arunca UnauthorizedAccessException
+    /// altfel). Sortate descrescator dupa data.
+    /// </summary>
+    Task<List<ComandaAngajatDto>> GetToateComenzileAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>Ca GetToateComenzileAsync, filtrat pe comenzile active (nelivrate, neanulate).</summary>
+    Task<List<ComandaAngajatDto>> GetComenziActiveAngajatAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Starile in care se poate trece direct din <paramref name="stareCurenta"/>
+    /// (vezi tranzitiile valide documentate in OrderService). Lista goala
+    /// daca <paramref name="stareCurenta"/> e o stare finala sau necunoscuta.
+    /// </summary>
+    IReadOnlyList<string> GetStariUrmatoarePosibile(string stareCurenta);
+
+    /// <summary>
+    /// Schimba starea unei comenzi - doar pentru angajati autentificati.
+    /// Respinge tranzitia daca starea curenta e finala ("livrata"/"anulata")
+    /// sau daca <paramref name="stareNoua"/> nu e o tranzitie valida din
+    /// starea curenta (vezi GetStariUrmatoarePosibile). Daca
+    /// <paramref name="stareNoua"/> e "se pregateste", dupa actualizarea
+    /// starii apeleaza automat
+    /// StoredProcedureRepository.UpdateCantitateTotalaLaComandaAsync, in
+    /// aceeasi tranzactie - daca scaderea stocului esueaza (stoc
+    /// insuficient), intreaga schimbare de stare e anulata.
+    /// </summary>
+    Task<OrderResult> SchimbaStareComandaAsync(
+        int comandaId,
+        string stareNoua,
+        CancellationToken cancellationToken = default);
 }

@@ -5,9 +5,11 @@ Acest folder contine stratul de servicii pentru autentificarea clientilor
 (preparate individuale + meniuri compuse), pentru cautarea in meniu (dupa
 denumire sau dupa alergen, cu negare), pentru cosul de comanda (adaugare din
 meniu/cautare, cantitate editabila) si pentru **crearea, vizualizarea si
-anularea** comenzilor (doar pentru clienti autentificati). **Nu contine inca
-schimbarea starii unei comenzi** (ex. spre "se pregateste") - asta apartine
-modulului de angajat, pas viitor separat (vezi ultima sectiune).
+anularea** comenzilor (doar pentru clienti autentificati). Partea de
+**vizualizare/schimbare de stare a comenzilor pentru angajati** (inclusiv
+actualizarea automata a stocului) e documentata in
+`ViewModels/Admin/README.md`, impreuna cu restul functionalitatii rezervate
+angajatilor (CRUD meniu, stoc aproape de epuizare).
 
 ## Fisiere
 
@@ -238,15 +240,15 @@ Detalii importante de implementare:
   gol, articol indisponibil, comanda deja finala), la fel ca `AuthResult` din
   `AuthService`.
 
-**Ce NU face inca `OrderService`** (pas viitor, alt modul):
-- Nu schimba starea unei comenzi catre **"se pregateste"** (doar catre
-  `"anulata"`, prin `AnuleazaComandaAsync`). Cand o comanda trece in "se
-  pregateste" - lucru care apartine modulului de angajat
-  (`feature/employee-features`) - acel modul trebuie sa apeleze
-  `StoredProcedureRepository.UpdateCantitateTotalaLaComandaAsync(comandaId)`,
-  ca sa scada din stoc cantitatile consumate de comanda. Aici, la creare
-  (starea ramane `"inregistrata"`, pusa de `sp_CreateComanda`), stocul nu e
-  atins.
+**Partea de angajat** (vizualizarea tuturor comenzilor si schimbarea starii
+lor, inclusiv actualizarea automata a stocului la "se pregateste") e
+implementata tot in `OrderService` (`GetToateComenzileAsync`,
+`GetComenziActiveAngajatAsync`, `SchimbaStareComandaAsync`,
+`GetStariUrmatoarePosibile`) - vezi documentatia completa in
+`ViewModels/Admin/README.md`, ca sa nu se dubleze aici. La creare
+(`CreeazaComandaAsync`), starea ramane `"inregistrata"` (pusa de
+`sp_CreateComanda`) si stocul nu e atins - se atinge doar cand starea trece
+explicit la "se pregateste".
 
 ## ViewModels noi (`ViewModels/`)
 
@@ -511,10 +513,9 @@ verificate separat. La pasul viitor de navigare/shell:
    (`GetComenziClientAsync`/`AnuleazaComandaAsync`/`MyOrdersViewModel`/`MyOrdersView`)
    exista deja acum (vezi sectiunile de mai sus) - butonul "Comanda" din
    `MeniuAfisareItemTemplate` chiar adauga in cos.
-6. Ramane pas viitor **doar** schimbarea starii unei comenzi catre "se
-   pregateste" (modulul de angajat, `feature/employee-features`). Acel cod
-   trebuie sa apeleze
-   `StoredProcedureRepository.UpdateCantitateTotalaLaComandaAsync(comandaId)`
-   ca sa scada din stoc - nici `OrderService.CreeazaComandaAsync`, nici
-   `AnuleazaComandaAsync` nu ating stocul (comanda ramane in
-   `"inregistrata"` pana un angajat o trece mai departe).
+6. Partea de angajat (CRUD meniu, vizualizarea/schimbarea starii comenzilor
+   - inclusiv actualizarea automata a stocului la "se pregateste" - si
+   stocul aproape de epuizare) exista deja si ea, in
+   `ViewModels/Admin/`/`Views/Admin/` (vezi `ViewModels/Admin/README.md`).
+   `MainWindowViewModel` va afisa acele ecrane doar cand
+   `SessionService.Instance.EsteAngajat` e `true`.
