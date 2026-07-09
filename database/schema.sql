@@ -25,6 +25,7 @@ GO
    1. Curatare (drop in ordine inversa dependentelor) - pentru rulari repetate
    ---------------------------------------------------------------------- */
 IF OBJECT_ID(N'dbo.sp_GetMeniuRestaurantCuAlergeni', N'P') IS NOT NULL DROP PROCEDURE dbo.sp_GetMeniuRestaurantCuAlergeni;
+IF OBJECT_ID(N'dbo.sp_SetPreparatIndisponibil', N'P') IS NOT NULL DROP PROCEDURE dbo.sp_SetPreparatIndisponibil;
 IF OBJECT_ID(N'dbo.sp_GetPreparateApropiateDeEpuizare', N'P') IS NOT NULL DROP PROCEDURE dbo.sp_GetPreparateApropiateDeEpuizare;
 IF OBJECT_ID(N'dbo.sp_GetComenziClientCuDetalii', N'P') IS NOT NULL DROP PROCEDURE dbo.sp_GetComenziClientCuDetalii;
 IF OBJECT_ID(N'dbo.sp_UpdateCantitateTotalaLaComanda', N'P') IS NOT NULL DROP PROCEDURE dbo.sp_UpdateCantitateTotalaLaComanda;
@@ -269,7 +270,14 @@ INSERT INTO dbo.StareComanda (Denumire) VALUES
 GO
 
 INSERT INTO dbo.Configurare (Cheie, Valoare, Descriere) VALUES
-    (N'DiscountMeniuProcent', N'10', N'Procent de discount aplicat la suma preparatelor componente pentru a obtine pretul unui Meniu');
+    (N'DiscountMeniuProcent',        N'10',  N'Procent de discount aplicat la suma preparatelor componente pentru a obtine pretul unui Meniu'),
+    (N'SumaMinimaComandaDiscount',   N'100', N'Suma minima a unei comenzi (in lei) peste care se aplica discountul de frecventa'),
+    (N'NumarComenziPentruDiscount',  N'5',   N'Numarul de comenzi plasate in IntervalTimpDiscount zile necesar pentru a deveni client frecvent'),
+    (N'IntervalTimpDiscount',        N'30',  N'Intervalul de timp (in zile) in care se numara comenzile pentru discountul de frecventa'),
+    (N'ProcentDiscountFrecventa',    N'5',   N'Procent de discount aplicat comenzilor clientilor frecventi'),
+    (N'PragTransportGratuit',        N'150', N'Suma (in lei) peste care transportul este gratuit'),
+    (N'CostTransport',               N'15',  N'Costul standard al transportului (in lei), aplicat sub PragTransportGratuit'),
+    (N'PragStocEpuizare',            N'10',  N'Prag implicit de cantitate in stoc sub care un preparat este considerat aproape de epuizare');
 GO
 
 /* ============================================================================
@@ -493,14 +501,26 @@ GO
 
 /* -----------------------------------------------------------------------
    sp_GetPreparateApropiateDeEpuizare
-   Lista preparatelor al caror stoc a scazut sub un prag dat (implicit 10
-   unitati), util pentru alerte de reaprovizionare.
+   Lista preparatelor al caror stoc a scazut sub un prag dat. Daca
+   @PragCantitate nu este specificat explicit, se preia valoarea implicita
+   din dbo.Configurare (cheia PragStocEpuizare) in loc de o valoare
+   hardcodata, util pentru alerte de reaprovizionare.
    ----------------------------------------------------------------------- */
 CREATE PROCEDURE dbo.sp_GetPreparateApropiateDeEpuizare
-    @PragCantitate DECIMAL(10,2) = 10
+    @PragCantitate DECIMAL(10,2) = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
+
+    IF @PragCantitate IS NULL
+    BEGIN
+        SELECT @PragCantitate = TRY_CAST(Valoare AS DECIMAL(10,2))
+        FROM dbo.Configurare
+        WHERE Cheie = N'PragStocEpuizare';
+    END
+
+    IF @PragCantitate IS NULL
+        SET @PragCantitate = 10;
 
     SELECT
         p.Id,
@@ -539,5 +559,31 @@ BEGIN
     LEFT JOIN dbo.Alergen a ON a.Id = pa.AlergenId
     GROUP BY m.Id, m.Denumire, cat.Denumire
     ORDER BY m.Denumire;
+END
+GO
+
+/* -----------------------------------------------------------------------
+   sp_SetPreparatIndisponibil
+   Marcheaza un preparat ca indisponibil (soft-delete). Preparatele NU se
+   sterg fizic din baza de date daca au fost deja folosite intr-o comanda -
+   FK-ul din ComandaDetaliu ar esua oricum, fiindca nu exista ON DELETE
+   CASCADE catre Preparat. "Stergerea" unui preparat din aplicatie trebuie
+   tratata la nivel de business logic ca UPDATE Disponibil = 0, nu ca DELETE.
+   ----------------------------------------------------------------------- */
+CREATE PROCEDURE dbo.sp_SetPreparatIndisponibil
+    @PreparatId INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    IF NOT EXISTS (SELECT 1 FROM dbo.Preparat WHERE Id = @PreparatId)
+    BEGIN
+        RAISERROR(N'Preparatul specificat nu exista.', 16, 1);
+        RETURN;
+    END
+
+    UPDATE dbo.Preparat
+    SET Disponibil = 0
+    WHERE Id = @PreparatId;
 END
 GO

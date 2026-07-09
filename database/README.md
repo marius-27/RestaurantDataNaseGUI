@@ -3,7 +3,7 @@
 Acest folder conține schema SQL Server 2022 pentru aplicația de comenzi
 online de restaurant. Scriptul `schema.sql` creează baza de date
 `RestaurantDataNase`, toate tabelele, constrângerile de integritate, o
-funcție scalară și 6 proceduri stocate.
+funcție scalară și 7 proceduri stocate.
 
 Acesta este doar pasul de schemă SQL — entitățile EF Core și `DbContext`-ul
 **nu** sunt implementate încă în acest pas.
@@ -48,10 +48,20 @@ Lista alergenilor posibili (ex. "Gluten", "Lactoză", "Arahide"). Se leagă de
 
 ### Configurare
 Tabel generic cheie-valoare pentru parametri ai aplicației care nu trebuie
-hardcodați în cod sau în proceduri — de exemplu `DiscountMeniuProcent`
-(procentul de discount aplicat prețului unui meniu față de suma
-preparatelor componente). Ușor de extins cu alte configurări în viitor
-fără a modifica schema.
+hardcodați în cod C# sau în proceduri — toate se citesc din acest tabel la
+runtime. Ușor de extins cu alte configurări în viitor fără a modifica
+schema. Chei folosite în prezent:
+
+| Cheie                        | Valoare seed | Descriere                                                                 |
+|-------------------------------|:------------:|----------------------------------------------------------------------------|
+| `DiscountMeniuProcent`        | 10           | Procent de discount aplicat la suma preparatelor componente ale unui Meniu |
+| `SumaMinimaComandaDiscount`   | 100          | Suma minimă a unei comenzi (lei) peste care se aplică discountul de frecvență |
+| `NumarComenziPentruDiscount`  | 5            | Numărul de comenzi necesare în `IntervalTimpDiscount` zile pentru a deveni client frecvent |
+| `IntervalTimpDiscount`        | 30           | Intervalul de timp (zile) în care se numără comenzile pentru discountul de frecvență |
+| `ProcentDiscountFrecventa`    | 5            | Procent de discount aplicat comenzilor clienților frecvenți               |
+| `PragTransportGratuit`        | 150          | Suma (lei) peste care transportul este gratuit                            |
+| `CostTransport`               | 15           | Costul standard al transportului (lei), aplicat sub `PragTransportGratuit`|
+| `PragStocEpuizare`            | 10           | Prag implicit de cantitate în stoc sub care un preparat e aproape de epuizare (folosit de `sp_GetPreparateApropiateDeEpuizare`) |
 
 ### StareComanda
 Tabel lookup pentru cele 5 stări posibile ale unei comenzi: `inregistrata`,
@@ -114,6 +124,29 @@ o valoare derivabilă din starea *curentă* a bazei de date — prețul
 preparatului sau al meniului se poate schimba ulterior, iar o comandă
 istorică trebuie să păstreze prețul de atunci pentru facturare/raportare
 corectă.
+
+## Convenția de soft-delete pentru Preparat și Meniu
+
+Preparatele și meniurile **nu se șterg fizic** din baza de date odată ce au
+fost folosite într-o comandă. Un `DELETE` pe `Preparat` sau `Meniu` ar eșua
+oricum din cauza FK-urilor existente din `ComandaDetaliu`
+(`FK_ComandaDetaliu_Preparat`, `FK_ComandaDetaliu_Meniu`), care **nu** au
+`ON DELETE CASCADE` — și intenționat, pentru a nu pierde istoricul
+comenzilor deja plasate.
+
+Din acest motiv, "ștergerea" unui preparat sau meniu din aplicație trebuie
+tratată la nivel de business logic (cod C#) ca un `UPDATE Disponibil = 0`,
+niciodată ca un `DELETE`. Coloana `Preparat.Disponibil` există deja în
+schemă exact pentru acest scop; procedurile care creează linii de comandă
+(`sp_AdaugaDetaliuComanda`) deja filtrează după `Disponibil = 1`, iar
+interfața trebuie să ascundă/marcheze ca indisponibile preparatele cu
+`Disponibil = 0` în loc să le elimine din listă.
+
+Pentru cazul simplu — marcarea unui preparat ca indisponibil — schema oferă
+procedura `dbo.sp_SetPreparatIndisponibil` (vezi mai jos). Meniurile nu au o
+coloană `Disponibil` proprie momentan; disponibilitatea unui meniu se poate
+deriva din disponibilitatea preparatelor sale componente la nivel de
+business logic, fără a introduce o coloană redundantă în schemă.
 
 ## De ce respectă schema Forma Normală 3
 
@@ -180,10 +213,14 @@ detaliu, starea comenzii și subtotalul fiecărei linii. Combină `Comanda`,
 
 ### 5. `sp_GetPreparateApropiateDeEpuizare`
 ```
-@PragCantitate DECIMAL(10,2) = 10
+@PragCantitate DECIMAL(10,2) = NULL
 ```
 Listează preparatele al căror stoc a scăzut sub pragul dat, împreună cu
-categoria lor (JOIN simplu) — util pentru alerte de reaprovizionare.
+categoria lor (JOIN simplu) — util pentru alerte de reaprovizionare. Dacă
+`@PragCantitate` nu este specificat explicit la apel, procedura preia
+valoarea implicită din `dbo.Configurare` (cheia `PragStocEpuizare`) în loc
+de o valoare hardcodată; dacă acea cheie lipsește din `Configurare`, se
+folosește 10 ca ultimă plasă de siguranță.
 
 ### 6. `sp_GetMeniuRestaurantCuAlergeni` — interogare complexă
 Returnează toate meniurile din restaurant, cu prețul calculat dinamic
@@ -192,12 +229,22 @@ preparatele componente ale fiecărui meniu, folosind `STRING_AGG` peste un
 lanț de JOIN-uri `Meniu → MeniuPreparat → Preparat → PreparatAlergen →
 Alergen`.
 
+### 7. `sp_SetPreparatIndisponibil`
+```
+@PreparatId INT
+```
+Marchează un preparat ca indisponibil (`Disponibil = 0`) — implementarea
+soft-delete descrisă în secțiunea
+[Convenția de soft-delete](#convenția-de-soft-delete-pentru-preparat-și-meniu)
+de mai sus. Nu execută niciun `DELETE`.
+
 ## Date seed incluse
 
 Scriptul populează automat:
 - `StareComanda`: cele 5 stări (`inregistrata`, `se pregateste`, `a plecat
   la client`, `livrata`, `anulata`).
-- `Configurare`: `DiscountMeniuProcent = 10`.
+- `Configurare`: toate cele 8 chei descrise în secțiunea
+  [Configurare](#configurare) de mai sus, cu valorile lor implicite.
 
 Restul tabelelor (Categorie, Alergen, Preparat, Meniu, Utilizator etc.) nu
 sunt populate — vor fi alimentate din aplicație sau din date de test
