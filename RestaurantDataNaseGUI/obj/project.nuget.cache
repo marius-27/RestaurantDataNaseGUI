@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "qy7Sj3c/cO0=",
+  "dgSpecHash": "biBh7v+AZKQ=",
   "success": true,
-  "projectFilePath": "/home/mmarius/Documents/Programming/C#/RestaurantDataNaseGUI/RestaurantDataNaseGUI/RestaurantDataNaseGUI.csproj",
+  "projectFilePath": "/home/mmarius/Documents/Programming/C#/Restaurant/RestaurantDataNaseGUI/RestaurantDataNaseGUI.csproj",
   "expectedPackageFiles": [
     "/home/mmarius/.nuget/packages/avalonia/12.0.5/avalonia.12.0.5.nupkg.sha512",
     "/home/mmarius/.nuget/packages/avalonia.angle.windows.natives/2.1.27548.20260419/avalonia.angle.windows.natives.2.1.27548.20260419.nupkg.sha512",

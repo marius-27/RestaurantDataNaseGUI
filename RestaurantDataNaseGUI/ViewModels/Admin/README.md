@@ -1,10 +1,11 @@
-# ViewModels/Admin/ si Views/Admin/ - CRUD meniu, comenzi si stoc (angajat)
+# ViewModels/Admin/ si Views/Admin/ - CRUD meniu, comenzi, stoc si rapoarte (angajat)
 
 Tot ce e **accesibil doar utilizatorilor cu `TipUtilizator = "Angajat"`**:
 CRUD complet pentru cele 4 entitati de meniu (`Services/IAdminService.cs`),
 vizualizarea/urmarirea tuturor comenzilor si schimbarea starii lor
-(`Services/IOrderService.cs`, extins - vezi mai jos) si vizualizarea
-stocului aproape de epuizare (`Services/IStockService.cs`). Toate verifica
+(`Services/IOrderService.cs`, extins - vezi mai jos), vizualizarea
+stocului aproape de epuizare (`Services/IStockService.cs`) si generarea de
+rapoarte (`Services/IReportService.cs` - vezi mai jos). Toate verifica
 autorizarea la nivel de service, nu doar in UI.
 
 ## `Services/IAdminService.cs` / `AdminService.cs`
@@ -176,6 +177,62 @@ apeleaza `StoredProcedureRepository.GetPreparateApropiateDeEpuizareAsync(pragCan
 - **fara** parametru explicit de prag, ca procedura sa foloseasca implicit
 cheia `PragStocEpuizare` din `dbo.Configurare`.
 
+## `Services/IReportService.cs` / `ReportService.cs`
+
+Cerinta din tema ("Se vor putea genera rapoarte de catre angajatii
+restaurantului") nu specifica ce rapoarte anume - alegerea de mai jos
+acopera cele patru intrebari pe care le pune de regula cineva care conduce
+un restaurant: *cat s-a vandut si cand?*, *ce se vinde cel mai bine?*, *ce
+categorii aduc banii?* si *ce mai e pe stoc?*. Toate patru sunt **doar
+citire**, verifica `EsteAngajat` la fel ca `GetToateComenzileAsync`
+(arunca `UnauthorizedAccessException`, nu returneaza un `Result` - acelasi
+motiv: sunt metode de citire, nu mutatii), si folosesc **exclusiv EF Core
+LINQ** (fara SQL brut, fara proceduri stocate noi) - agregarile (`Sum`,
+`Count`, `GroupBy`) sunt parametrizate automat de provider.
+
+Tipar comun de interogare: filtrarea pe interval de date si sumele
+per-comanda/per-linie (proiectate printr-un `Select` cu un `Sum` corelat pe
+`ComandaDetalii`) sunt translatate de EF Core in SQL parametrizat; gruparea
+finala (pe zi/preparat/categorie) si aplicarea discountului (care foloseste
+`Math.Round`, netranslatabil in SQL) se fac cu LINQ in memorie, dupa
+incarcare - acelasi tipar deja folosit in
+`OrderService.GetComenziClientAsync`/`MapeazaComandaAngajat`. Filtrarea pe
+starea "anulata" foloseste tot in-memory un `HashSet<string>` cu comparator
+`OrdinalIgnoreCase` (`StariAnulate`), niciodata direct intr-un `Where` LINQ
+- daca ar fi translatat intr-un `IN (...)` SQL, semantica *case-insensitive*
+nu ar mai fi garantata (colatia bazei de date poate diferi).
+
+- **`RaportVanzariPerioadaAsync(dataStart, dataEnd)`**: numarul de comenzi
+  plasate in interval (toate starile), cate dintre ele au fost anulate si
+  suma totala incasata (mancare + transport - discount, comenzile anulate
+  excluse - discountul e aplicat corect, per comanda, la fel ca in
+  `OrderService`), plus o defalcare pe zi (`Zile: List<VanzareZilnicaDto>`).
+- **`RaportPreparateCelMaiVanduteAsync(dataStart, dataEnd, top = 10)`**: top
+  preparate/meniuri dupa cantitatea totala comandata in interval, prin
+  `ComandaDetalii` (comenzile anulate sunt excluse). Fiindca un rand din
+  `ComandaDetaliu` e fie un `Preparat`, fie un `Meniu` (niciodata ambele -
+  vezi CHECK constraint din schema), gruparea se face pe perechea
+  `(PreparatId, MeniuId)`, iar denumirea/categoria se preiau din oricare
+  dintre cele doua navigatii e nenula.
+- **`RaportVanzariPeCategorieAsync(dataStart, dataEnd)`**: suma vanzarilor
+  (comenzile anulate excluse) grupata pe categoria preparatului/meniului
+  fiecarei linii de comanda.
+- **`RaportStocCurentAsync()`**: toate preparatele (indiferent de
+  `Disponibil`), sortate pe categorie apoi denumire - stocul curent
+  (`CantitateTotalaRestaurant` + `UnitateMasura`) al fiecaruia. Nu reuseste
+  logica din `StockService` (aceea foloseste `sp_GetPreparateApropiateDeEpuizare`,
+  o procedura stocata filtrata pe un prag; aici se cere un inventar complet,
+  pur LINQ, deci o interogare noua peste `context.Preparate`).
+
+**Simplificare asumata**: `RaportPreparateCelMaiVanduteAsync` si
+`RaportVanzariPeCategorieAsync` raporteaza suma *bruta* a liniilor
+(`Cantitate * PretUnitarLaComanda`), **fara** sa proratizeze discountul
+aplicat la nivelul intregii comenzi pe fiecare linie/categorie in parte -
+alocarea proportionala a unui discount procentual pe linii ar complica
+raportul fara sa schimbe concluzia lui (ce se vinde cel mai bine / ce
+categorii aduc cei mai multi bani), iar `RaportVanzariPerioadaAsync` (unde
+suma totala *chiar* conteaza) aplica deja discountul corect, per comanda.
+
 ## `Models/DTOs/` noi
 
 - **`ComandaAngajatDto`**: **mosteneste** `ComandaClientDto` (nu il
@@ -192,6 +249,18 @@ cheia `PragStocEpuizare` din `dbo.Configurare`.
 
 Toate patru sunt DTO-uri "plate", fara logica - conversia spre/dinspre
 formularul din ViewModel se face in ViewModels, nu in DTO.
+
+## `Models/DTOs/Reports/` (rezultatele `IReportService`)
+
+- **`RaportVanzariDto`** (+ **`VanzareZilnicaDto`** pentru fiecare zi din
+  `Zile`): rezultatul `RaportVanzariPerioadaAsync`.
+- **`PreparatVandutDto`**: o linie din `RaportPreparateCelMaiVanduteAsync`
+  (`Tip` = `"Preparat"` sau `"Meniu"`).
+- **`VanzareCategorieDto`**: o linie din `RaportVanzariPeCategorieAsync`.
+- **`PreparatStocDto`**: o linie din `RaportStocCurentAsync`.
+
+Toate patru sunt DTO-uri "plate" fara logica, la fel ca restul - populate
+direct prin proiectii `Select` in `ReportService`.
 
 ## ViewModels (`ViewModels/Admin/`)
 
@@ -258,6 +327,28 @@ mai jos).
   (`ObservableCollection<PreparatEpuizareDto>`) + `NuAreRezultate` (computed,
   pentru mesajul "niciun preparat aproape de epuizare"), populate de
   `IncarcaStocCommand` din `IStockService.GetPreparateApropiateDeEpuizareAsync()`.
+- **`ReportsViewModel`**: `TipuriRaport` (`ObservableCollection<TipRaportOptiune>`,
+  cate o pereche `TipRaport`+denumire afisata per raport din `IReportService`)
+  + `TipSelectat` (bindabil la un `ComboBox`) + `DataStart`/`DataEnd`
+  (`DateTimeOffset?`, implicit ultimele 30 de zile, bindabile direct la
+  `DatePicker.SelectedDate`) + `Top` (doar pentru raportul de preparate).
+  Rezultatul **nu** e o singura colectie cu "coloane dinamice", ci patru
+  proprietati separate, cate una per tip de raport (`RaportVanzari`,
+  `PreparateVandute`, `VanzariPeCategorie`, `StocCurent`) - fiecare raport
+  are propriile campuri, deci patru `DataTemplate`-uri tipizate sunt mai
+  simplu de legat in Avalonia decat un model generic de randuri/coloane.
+  `AfiseazaVanzari`/`AfiseazaPreparate`/`AfiseazaCategorii`/`AfiseazaStoc`
+  (computed, notificate la schimbarea lui `TipSelectat`) decid ce sectiune
+  a `ReportsView` e vizibila. `GenereazaRaportCommand` apeleaza metoda
+  potrivita din `IReportService` dupa `TipSelectat.Tip`; spre deosebire de
+  `StocEpuizareView`/`ToateComenzileView`, **nu** se incarca automat la
+  `Loaded` - un raport are parametri (interval, top) pe care userul trebuie
+  sa-i aleaga intai, deci generarea e mereu un gest explicit ("Genereaza").
+  `ExportaCsvCommand` scrie randurile raportului curent afisat
+  intr-un fisier `.csv` in `Rapoarte/` (relativ la directorul aplicatiei),
+  cu escaping minim (ghilimele in jurul valorilor ce contin virgula/ghilimele/
+  linie noua) - fara nicio libraie externa de CSV, doar concatenare de
+  string-uri, cerinta explicita din tema pentru acest export.
 
 ### Clase mici auxiliare
 
@@ -267,13 +358,17 @@ mai jos).
   (bindabil) - un rand din lista editabila de componente din
   `MeniuAdminViewModel`.
 - **`ComandaAngajatRandViewModel`**: vezi mai sus.
+- **`TipRaportOptiune`** (`ViewModels/Admin/TipRaport.cs`): `Tip`
+  (`TipRaport`, enum) + `Denumire` (text afisat) - un item din `ComboBox`-ul
+  de tip raport din `ReportsViewModel`.
 
 ## Views (`Views/Admin/`)
 
 Cate un `UserControl` per ViewModel (`CategorieAdminView`, `AlergenAdminView`,
-`PreparatAdminView`, `MeniuAdminView`, `ToateComenzileView`, `StocEpuizareView`),
-fara logica in code-behind (doar apelul `IncarcaXxxCommand` la evenimentul
-`Loaded`, la fel ca in restul proiectului). Ecranele CRUD folosesc acelasi
+`PreparatAdminView`, `MeniuAdminView`, `ToateComenzileView`, `StocEpuizareView`,
+`ReportsView`), fara logica in code-behind (doar apelul `IncarcaXxxCommand` la
+evenimentul `Loaded`, la fel ca in restul proiectului - cu exceptia
+`ReportsView`, vezi mai sus de ce). Ecranele CRUD folosesc acelasi
 tipar de layout: un formular sus/in stanga (creare sau editare, dupa
 `EsteEditare`) si lista existentelor dedesubt/in dreapta, cu butoane
 "Editeaza"/"Sterge" pe fiecare rand (legate de
@@ -296,6 +391,16 @@ active, un `ComboBox` cu starile urmatoare valide + butonul "Confirma"
 (denumire, categorie, cantitate + unitate de masura, "Indisponibil" daca e
 cazul).
 
+`ReportsView` are trei zone: (1) formularul de parametri (selector tip
+raport, `DatePicker` de la/pana la - ascuns pentru "Stoc curent", care nu
+are interval -, `NumericUpDown` "Top" - vizibil doar pentru raportul de
+preparate -, butoanele "Genereaza"/"Exporta CSV"); (2) un rezumat text
+vizibil doar pentru raportul de vanzari (numar comenzi, comenzi anulate,
+suma totala); (3) zona de rezultate cu patru `ItemsControl`-uri, cate unul
+per tip de raport, cu `IsVisible` legat de `AfiseazaVanzari`/`AfiseazaPreparate`/
+`AfiseazaCategorii`/`AfiseazaStoc` - doar unul e vizibil o data, in functie
+de `TipSelectat`.
+
 ## Cum se conecteaza ulterior (nu e facut inca)
 
 Ca si restul View-urilor din proiect, ecranele de administrare **nu sunt
@@ -303,16 +408,17 @@ cablate in `MainWindow`** - exista independent. La pasul viitor de
 navigare/shell:
 
 1. `MainWindowViewModel` va afisa un meniu de administrare (Categorii /
-   Alergeni / Preparate / Meniuri / Comenzi / Stoc) **doar** cand
+   Alergeni / Preparate / Meniuri / Comenzi / Stoc / Rapoarte) **doar** cand
    `SessionService.Instance.EsteAngajat` e `true` - exact ca `PoateAdministra`
    expus de fiecare ViewModel de aici.
-2. Chiar daca acel meniu ar fi ascuns dintr-o eroare de navigare, mutatiile
-   raman sigure: `IAdminService`/`IOrderService`/`IStockService` verifica
-   independent `EsteAngajat` la fiecare operatie relevanta, deci UI-ul nu e
-   singura linie de aparare.
+2. Chiar daca acel meniu ar fi ascuns dintr-o eroare de navigare, mutatiile/
+   citirile raman sigure: `IAdminService`/`IOrderService`/`IStockService`/
+   `IReportService` verifica independent `EsteAngajat` la fiecare operatie
+   relevanta, deci UI-ul nu e singura linie de aparare.
 3. Cu asta, tot ce era listat ca "pas viitor" in README-urile anterioare
    (vizualizarea/schimbarea starii comenzilor de catre angajati, actualizarea
-   automata a stocului la "se pregateste") e implementat. Ce ramane cu
+   automata a stocului la "se pregateste", generarea de rapoarte) e
+   implementat. Ce ramane cu
    adevarat viitor e doar navigarea/shell-ul propriu-zis (`MainWindowViewModel`)
    care leaga toate ecranele deja existente intr-o singura aplicatie
    navigabila.

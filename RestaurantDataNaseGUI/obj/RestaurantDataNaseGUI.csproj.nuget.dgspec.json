@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "/home/mmarius/Documents/Programming/C#/RestaurantDataNaseGUI/RestaurantDataNaseGUI/RestaurantDataNaseGUI.csproj": {}
+    "/home/mmarius/Documents/Programming/C#/Restaurant/RestaurantDataNaseGUI/RestaurantDataNaseGUI.csproj": {}
   },
   "projects": {
-    "/home/mmarius/Documents/Programming/C#/RestaurantDataNaseGUI/RestaurantDataNaseGUI/RestaurantDataNaseGUI.csproj": {
+    "/home/mmarius/Documents/Programming/C#/Restaurant/RestaurantDataNaseGUI/RestaurantDataNaseGUI.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/home/mmarius/Documents/Programming/C#/RestaurantDataNaseGUI/RestaurantDataNaseGUI/RestaurantDataNaseGUI.csproj",
+        "projectUniqueName": "/home/mmarius/Documents/Programming/C#/Restaurant/RestaurantDataNaseGUI/RestaurantDataNaseGUI.csproj",
         "projectName": "RestaurantDataNaseGUI",
-        "projectPath": "/home/mmarius/Documents/Programming/C#/RestaurantDataNaseGUI/RestaurantDataNaseGUI/RestaurantDataNaseGUI.csproj",
+        "projectPath": "/home/mmarius/Documents/Programming/C#/Restaurant/RestaurantDataNaseGUI/RestaurantDataNaseGUI.csproj",
         "packagesPath": "/home/mmarius/.nuget/packages/",
-        "outputPath": "/home/mmarius/Documents/Programming/C#/RestaurantDataNaseGUI/RestaurantDataNaseGUI/obj/",
+        "outputPath": "/home/mmarius/Documents/Programming/C#/Restaurant/RestaurantDataNaseGUI/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "/home/mmarius/.nuget/NuGet/NuGet.Config"
@@ -20,6 +20,7 @@
           "net10.0"
         ],
         "sources": {
+          "/usr/share/dotnet/library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {

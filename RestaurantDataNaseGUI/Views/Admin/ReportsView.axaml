@@ -1,0 +1,148 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:RestaurantDataNaseGUI.ViewModels.Admin"
+             xmlns:reports="using:RestaurantDataNaseGUI.Models.DTOs.Reports"
+             xmlns:conv="using:Avalonia.Data.Converters"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="700"
+             x:Class="RestaurantDataNaseGUI.Views.Admin.ReportsView"
+             x:Name="Root"
+             x:DataType="vm:ReportsViewModel">
+
+    <Design.DataContext>
+        <!-- Doar pentru previzualizare in IDE. -->
+        <vm:ReportsViewModel/>
+    </Design.DataContext>
+
+    <Grid RowDefinitions="Auto,Auto,Auto,*" Margin="16">
+        <TextBlock Grid.Row="0" Text="Rapoarte" FontSize="22" FontWeight="Bold" Margin="0,0,0,12"/>
+
+        <Border Grid.Row="1" Padding="12" BorderBrush="#33808080" BorderThickness="1" CornerRadius="6" Margin="0,0,0,12">
+            <StackPanel Spacing="8">
+                <WrapPanel Orientation="Horizontal">
+                    <StackPanel Margin="0,0,16,8" Spacing="4">
+                        <TextBlock Text="Tip raport"/>
+                        <ComboBox ItemsSource="{Binding TipuriRaport}" SelectedItem="{Binding TipSelectat, Mode=TwoWay}" MinWidth="240">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate x:DataType="vm:TipRaportOptiune">
+                                    <TextBlock Text="{Binding Denumire}"/>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                    </StackPanel>
+
+                    <StackPanel Margin="0,0,16,8" Spacing="4" IsVisible="{Binding NecesitaInterval}">
+                        <TextBlock Text="De la"/>
+                        <DatePicker SelectedDate="{Binding DataStart, Mode=TwoWay}"/>
+                    </StackPanel>
+
+                    <StackPanel Margin="0,0,16,8" Spacing="4" IsVisible="{Binding NecesitaInterval}">
+                        <TextBlock Text="Pana la"/>
+                        <DatePicker SelectedDate="{Binding DataEnd, Mode=TwoWay}"/>
+                    </StackPanel>
+
+                    <StackPanel Margin="0,0,16,8" Spacing="4" IsVisible="{Binding AfiseazaPreparate}">
+                        <TextBlock Text="Top"/>
+                        <NumericUpDown Value="{Binding Top, Mode=TwoWay}" Minimum="1" Increment="1" FormatString="0"/>
+                    </StackPanel>
+                </WrapPanel>
+
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Button Content="Genereaza" Command="{Binding GenereazaRaportCommand}"/>
+                    <Button Content="Exporta CSV" Command="{Binding ExportaCsvCommand}"/>
+                    <TextBlock Text="Se genereaza..." IsVisible="{Binding EsteInCurs}" VerticalAlignment="Center" Opacity="0.7"/>
+                </StackPanel>
+
+                <TextBlock Text="{Binding MesajEroare}" Foreground="Red" TextWrapping="Wrap"
+                           IsVisible="{Binding MesajEroare, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}"/>
+                <TextBlock Text="{Binding MesajExport}" Foreground="Green" TextWrapping="Wrap"
+                           IsVisible="{Binding MesajExport, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}"/>
+            </StackPanel>
+        </Border>
+
+        <StackPanel Grid.Row="2" Spacing="4" Margin="0,0,0,12" IsVisible="{Binding AfiseazaVanzari}">
+            <TextBlock Text="{Binding RaportVanzari.NumarComenzi, StringFormat='Comenzi: {0}'}" FontWeight="SemiBold"/>
+            <TextBlock Text="{Binding RaportVanzari.NumarComenziAnulate, StringFormat='Comenzi anulate: {0}'}"/>
+            <TextBlock Text="{Binding RaportVanzari.SumaTotalaIncasata, StringFormat='Suma totala incasata: {0:0.00} lei'}" FontWeight="SemiBold"/>
+        </StackPanel>
+
+        <ScrollViewer Grid.Row="3">
+            <StackPanel Spacing="8">
+
+                <TextBlock Text="Niciun rezultat pentru perioada/filtrele selectate." Opacity="0.7"
+                           IsVisible="{Binding NuAreRezultate}"/>
+
+                <!-- Vanzari pe zi -->
+                <ItemsControl ItemsSource="{Binding RaportVanzari.Zile}" IsVisible="{Binding AfiseazaVanzari}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="reports:VanzareZilnicaDto">
+                            <Border Padding="10" Margin="0,4" BorderBrush="#22808080" BorderThickness="1" CornerRadius="6">
+                                <Grid ColumnDefinitions="Auto,*,Auto,Auto">
+                                    <TextBlock Grid.Column="0" Text="{Binding Data, StringFormat='{}{0:dd.MM.yyyy}'}" FontWeight="SemiBold" MinWidth="100" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding NumarComenzi, StringFormat='{}{0} comenzi'}" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="2" Text="{Binding NumarComenziAnulate, StringFormat='{}{0} anulate'}" Margin="8,0" Opacity="0.7" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="3" Text="{Binding SumaIncasata, StringFormat='{}{0:0.00} lei'}" FontWeight="Bold" VerticalAlignment="Center"/>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <!-- Preparate/meniuri cel mai vandute -->
+                <ItemsControl ItemsSource="{Binding PreparateVandute}" IsVisible="{Binding AfiseazaPreparate}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="reports:PreparatVandutDto">
+                            <Border Padding="10" Margin="0,4" BorderBrush="#22808080" BorderThickness="1" CornerRadius="6">
+                                <Grid ColumnDefinitions="*,Auto,Auto,Auto">
+                                    <StackPanel Grid.Column="0" Spacing="2">
+                                        <TextBlock Text="{Binding Denumire}" FontWeight="SemiBold"/>
+                                        <TextBlock Text="{Binding Categorie}" FontSize="11" Opacity="0.7"/>
+                                    </StackPanel>
+                                    <TextBlock Grid.Column="1" Text="{Binding Tip}" Margin="8,0" Opacity="0.7" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="2" Text="{Binding CantitateTotalaComandata, StringFormat='{}{0:0.##} buc.'}" Margin="8,0" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="3" Text="{Binding SumaIncasata, StringFormat='{}{0:0.00} lei'}" FontWeight="Bold" VerticalAlignment="Center"/>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <!-- Vanzari pe categorie -->
+                <ItemsControl ItemsSource="{Binding VanzariPeCategorie}" IsVisible="{Binding AfiseazaCategorii}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="reports:VanzareCategorieDto">
+                            <Border Padding="10" Margin="0,4" BorderBrush="#22808080" BorderThickness="1" CornerRadius="6">
+                                <Grid ColumnDefinitions="*,Auto,Auto">
+                                    <TextBlock Grid.Column="0" Text="{Binding Categorie}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding CantitateTotala, StringFormat='{}{0:0.##} buc.'}" Margin="8,0" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="2" Text="{Binding SumaIncasata, StringFormat='{}{0:0.00} lei'}" FontWeight="Bold" VerticalAlignment="Center"/>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <!-- Stoc curent -->
+                <ItemsControl ItemsSource="{Binding StocCurent}" IsVisible="{Binding AfiseazaStoc}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="reports:PreparatStocDto">
+                            <Border Padding="10" Margin="0,4" BorderBrush="#22808080" BorderThickness="1" CornerRadius="6">
+                                <Grid ColumnDefinitions="*,Auto,Auto">
+                                    <StackPanel Grid.Column="0" Spacing="2">
+                                        <TextBlock Text="{Binding Denumire}" FontWeight="SemiBold"/>
+                                        <TextBlock Text="{Binding Categorie}" FontSize="11" Opacity="0.7"/>
+                                        <TextBlock Text="Indisponibil" IsVisible="{Binding !Disponibil}" Foreground="Red" FontSize="11" FontWeight="Bold"/>
+                                    </StackPanel>
+                                    <TextBlock Grid.Column="1" Text="{Binding CantitateTotalaRestaurant, StringFormat='{}{0:0.##}'}" VerticalAlignment="Center" FontWeight="Bold"/>
+                                    <TextBlock Grid.Column="2" Text="{Binding UnitateMasura}" VerticalAlignment="Center" Opacity="0.7" Margin="4,0,0,0"/>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

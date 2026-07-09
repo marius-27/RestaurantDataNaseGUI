@@ -25,56 +25,59 @@ build_property.PlatformNeutralAssembly =
 build_property.EnforceExtendedAnalyzerRules = 
 build_property._SupportedPlatformList = Linux,macOS,Windows
 build_property.RootNamespace = RestaurantDataNaseGUI
-build_property.ProjectDir = /home/mmarius/Documents/Programming/C#/RestaurantDataNaseGUI/RestaurantDataNaseGUI/
+build_property.ProjectDir = /home/mmarius/Documents/Programming/C#/Restaurant/RestaurantDataNaseGUI/
 build_property.EnableComHosting = 
 build_property.EnableGeneratedComInterfaceComImportInterop = 
 build_property.EffectiveAnalysisLevelStyle = 10.0
 build_property.EnableCodeStyleSeverity = 
 
-[/home/mmarius/Documents/Programming/C\#/RestaurantDataNaseGUI/RestaurantDataNaseGUI/App.axaml]
+[/home/mmarius/Documents/Programming/C\#/Restaurant/RestaurantDataNaseGUI/App.axaml]
 build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
 
-[/home/mmarius/Documents/Programming/C\#/RestaurantDataNaseGUI/RestaurantDataNaseGUI/Views/Admin/AlergenAdminView.axaml]
+[/home/mmarius/Documents/Programming/C\#/Restaurant/RestaurantDataNaseGUI/Views/Admin/AlergenAdminView.axaml]
 build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
 
-[/home/mmarius/Documents/Programming/C\#/RestaurantDataNaseGUI/RestaurantDataNaseGUI/Views/Admin/CategorieAdminView.axaml]
+[/home/mmarius/Documents/Programming/C\#/Restaurant/RestaurantDataNaseGUI/Views/Admin/CategorieAdminView.axaml]
 build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
 
-[/home/mmarius/Documents/Programming/C\#/RestaurantDataNaseGUI/RestaurantDataNaseGUI/Views/Admin/MeniuAdminView.axaml]
+[/home/mmarius/Documents/Programming/C\#/Restaurant/RestaurantDataNaseGUI/Views/Admin/MeniuAdminView.axaml]
 build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
 
-[/home/mmarius/Documents/Programming/C\#/RestaurantDataNaseGUI/RestaurantDataNaseGUI/Views/Admin/PreparatAdminView.axaml]
+[/home/mmarius/Documents/Programming/C\#/Restaurant/RestaurantDataNaseGUI/Views/Admin/PreparatAdminView.axaml]
 build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
 
-[/home/mmarius/Documents/Programming/C\#/RestaurantDataNaseGUI/RestaurantDataNaseGUI/Views/Admin/StocEpuizareView.axaml]
+[/home/mmarius/Documents/Programming/C\#/Restaurant/RestaurantDataNaseGUI/Views/Admin/ReportsView.axaml]
 build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
 
-[/home/mmarius/Documents/Programming/C\#/RestaurantDataNaseGUI/RestaurantDataNaseGUI/Views/Admin/ToateComenzileView.axaml]
+[/home/mmarius/Documents/Programming/C\#/Restaurant/RestaurantDataNaseGUI/Views/Admin/StocEpuizareView.axaml]
 build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
 
-[/home/mmarius/Documents/Programming/C\#/RestaurantDataNaseGUI/RestaurantDataNaseGUI/Views/CartView.axaml]
+[/home/mmarius/Documents/Programming/C\#/Restaurant/RestaurantDataNaseGUI/Views/Admin/ToateComenzileView.axaml]
 build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
 
-[/home/mmarius/Documents/Programming/C\#/RestaurantDataNaseGUI/RestaurantDataNaseGUI/Views/LoginView.axaml]
+[/home/mmarius/Documents/Programming/C\#/Restaurant/RestaurantDataNaseGUI/Views/CartView.axaml]
 build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
 
-[/home/mmarius/Documents/Programming/C\#/RestaurantDataNaseGUI/RestaurantDataNaseGUI/Views/MainWindow.axaml]
+[/home/mmarius/Documents/Programming/C\#/Restaurant/RestaurantDataNaseGUI/Views/LoginView.axaml]
 build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
 
-[/home/mmarius/Documents/Programming/C\#/RestaurantDataNaseGUI/RestaurantDataNaseGUI/Views/MenuView.axaml]
+[/home/mmarius/Documents/Programming/C\#/Restaurant/RestaurantDataNaseGUI/Views/MainWindow.axaml]
 build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
 
-[/home/mmarius/Documents/Programming/C\#/RestaurantDataNaseGUI/RestaurantDataNaseGUI/Views/MyOrdersView.axaml]
+[/home/mmarius/Documents/Programming/C\#/Restaurant/RestaurantDataNaseGUI/Views/MenuView.axaml]
 build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
 
-[/home/mmarius/Documents/Programming/C\#/RestaurantDataNaseGUI/RestaurantDataNaseGUI/Views/RegisterView.axaml]
+[/home/mmarius/Documents/Programming/C\#/Restaurant/RestaurantDataNaseGUI/Views/MyOrdersView.axaml]
 build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
 
-[/home/mmarius/Documents/Programming/C\#/RestaurantDataNaseGUI/RestaurantDataNaseGUI/Views/Resources/MenuTemplates.axaml]
+[/home/mmarius/Documents/Programming/C\#/Restaurant/RestaurantDataNaseGUI/Views/RegisterView.axaml]
 build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
 
-[/home/mmarius/Documents/Programming/C\#/RestaurantDataNaseGUI/RestaurantDataNaseGUI/Views/SearchView.axaml]
+[/home/mmarius/Documents/Programming/C\#/Restaurant/RestaurantDataNaseGUI/Views/Resources/MenuTemplates.axaml]
 build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
 
-[/home/mmarius/Documents/Programming/C\#/RestaurantDataNaseGUI/RestaurantDataNaseGUI/Assets/avalonia-logo.ico]
+[/home/mmarius/Documents/Programming/C\#/Restaurant/RestaurantDataNaseGUI/Views/SearchView.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[/home/mmarius/Documents/Programming/C\#/Restaurant/RestaurantDataNaseGUI/Assets/avalonia-logo.ico]
 build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaResource
