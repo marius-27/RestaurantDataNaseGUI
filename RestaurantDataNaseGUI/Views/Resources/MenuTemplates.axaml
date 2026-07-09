@@ -13,8 +13,9 @@
         ElementName=Root nu poate fi validata static la compilare pentru
         ambele - foloseste bindare clasica (prin reflectie), rezolvata la
         runtime prin NameScope-ul View-ului care instantiaza template-ul.
-        Ambele ViewModel-uri expun o proprietate PoateComanda cu acelasi
-        nume, exact ca acest binding sa functioneze indiferent de View.
+        Ambele ViewModel-uri expun o proprietate PoateComanda si o comanda
+        AdaugaInCosCommand cu acelasi nume/semnatura, exact ca aceste
+        binding-uri sa functioneze indiferent de View.
     -->
 
     <DataTemplate x:Key="MeniuAfisareItemTemplate" x:CompileBindings="False" x:DataType="dtos:MeniuAfisareDto">
@@ -56,6 +57,8 @@
                            Foreground="Red" FontWeight="Bold" FontSize="12"/>
 
                 <Button Content="Comanda"
+                        Command="{Binding DataContext.AdaugaInCosCommand, ElementName=Root}"
+                        CommandParameter="{Binding}"
                         IsVisible="{Binding DataContext.PoateComanda, ElementName=Root}"
                         IsEnabled="{Binding !EsteIndisponibil}"
                         HorizontalAlignment="Stretch"

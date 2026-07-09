@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using RestaurantDataNaseGUI.Models.DTOs;
 using RestaurantDataNaseGUI.Services;
 
 namespace RestaurantDataNaseGUI.ViewModels;
@@ -18,6 +19,7 @@ public partial class MenuViewModel : ViewModelBase
 {
     private readonly IMenuService _menuService;
     private readonly ISessionService _sessionService;
+    private readonly ICartService _cartService;
 
     [ObservableProperty]
     private ObservableCollection<CategorieGrupataViewModel> _categorii = new();
@@ -31,15 +33,28 @@ public partial class MenuViewModel : ViewModelBase
     /// <summary>True doar daca e autentificat un Client - decide vizibilitatea butonului "Comanda" in View.</summary>
     public bool PoateComanda => _sessionService.EsteAutentificat && _sessionService.EsteClient;
 
-    public MenuViewModel() : this(new MenuService(), SessionService.Instance)
+    public MenuViewModel() : this(new MenuService(), SessionService.Instance, CartService.Instance)
     {
     }
 
-    public MenuViewModel(IMenuService menuService, ISessionService sessionService)
+    public MenuViewModel(IMenuService menuService, ISessionService sessionService, ICartService cartService)
     {
         _menuService = menuService;
         _sessionService = sessionService;
+        _cartService = cartService;
         _sessionService.CurrentUserChanged += (_, _) => OnPropertyChanged(nameof(PoateComanda));
+    }
+
+    /// <summary>Adauga itemul in cos - nu face nimic daca userul curent nu poate comanda sau daca itemul e indisponibil.</summary>
+    [RelayCommand]
+    private void AdaugaInCos(MeniuAfisareDto? item)
+    {
+        if (item is null || !PoateComanda || item.EsteIndisponibil)
+        {
+            return;
+        }
+
+        _cartService.AdaugaInCos(item);
     }
 
     [RelayCommand]
