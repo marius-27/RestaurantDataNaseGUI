@@ -34,7 +34,13 @@ build_property.EnableCodeStyleSeverity =
 [/home/mmarius/Documents/Programming/C\#/RestaurantDataNaseGUI/RestaurantDataNaseGUI/App.axaml]
 build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
 
+[/home/mmarius/Documents/Programming/C\#/RestaurantDataNaseGUI/RestaurantDataNaseGUI/Views/LoginView.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
 [/home/mmarius/Documents/Programming/C\#/RestaurantDataNaseGUI/RestaurantDataNaseGUI/Views/MainWindow.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[/home/mmarius/Documents/Programming/C\#/RestaurantDataNaseGUI/RestaurantDataNaseGUI/Views/RegisterView.axaml]
 build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
 
 [/home/mmarius/Documents/Programming/C\#/RestaurantDataNaseGUI/RestaurantDataNaseGUI/Assets/avalonia-logo.ico]

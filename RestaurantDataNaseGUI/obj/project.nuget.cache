@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "HNF9t0vS6co=",
+  "dgSpecHash": "qy7Sj3c/cO0=",
   "success": true,
   "projectFilePath": "/home/mmarius/Documents/Programming/C#/RestaurantDataNaseGUI/RestaurantDataNaseGUI/RestaurantDataNaseGUI.csproj",
   "expectedPackageFiles": [
@@ -21,6 +21,7 @@
     "/home/mmarius/.nuget/packages/avaloniaui.diagnosticssupport/2.2.3/avaloniaui.diagnosticssupport.2.2.3.nupkg.sha512",
     "/home/mmarius/.nuget/packages/azure.core/1.47.1/azure.core.1.47.1.nupkg.sha512",
     "/home/mmarius/.nuget/packages/azure.identity/1.14.2/azure.identity.1.14.2.nupkg.sha512",
+    "/home/mmarius/.nuget/packages/bcrypt.net-next/4.0.3/bcrypt.net-next.4.0.3.nupkg.sha512",
     "/home/mmarius/.nuget/packages/communitytoolkit.mvvm/8.4.1/communitytoolkit.mvvm.8.4.1.nupkg.sha512",
     "/home/mmarius/.nuget/packages/harfbuzzsharp/8.3.1.3/harfbuzzsharp.8.3.1.3.nupkg.sha512",
     "/home/mmarius/.nuget/packages/harfbuzzsharp.nativeassets.linux/8.3.1.3/harfbuzzsharp.nativeassets.linux.8.3.1.3.nupkg.sha512",
