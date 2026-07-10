@@ -401,24 +401,17 @@ per tip de raport, cu `IsVisible` legat de `AfiseazaVanzari`/`AfiseazaPreparate`
 `AfiseazaCategorii`/`AfiseazaStoc` - doar unul e vizibil o data, in functie
 de `TipSelectat`.
 
-## Cum se conecteaza ulterior (nu e facut inca)
+## Cum e conectat in shell
 
-Ca si restul View-urilor din proiect, ecranele de administrare **nu sunt
-cablate in `MainWindow`** - exista independent. La pasul viitor de
-navigare/shell:
+Ecranele de administrare sunt acum cablate in `MainWindow` prin
+`MainWindowViewModel` (vezi `ViewModels/README.md`):
 
-1. `MainWindowViewModel` va afisa un meniu de administrare (Categorii /
-   Alergeni / Preparate / Meniuri / Comenzi / Stoc / Rapoarte) **doar** cand
-   `SessionService.Instance.EsteAngajat` e `true` - exact ca `PoateAdministra`
-   expus de fiecare ViewModel de aici.
+1. `MainWindowViewModel` afiseaza meniul de administrare (Categorii /
+   Alergeni / Preparate / Meniuri / Toate comenzile / Stoc epuizare /
+   Rapoarte) **doar** cand `EsteAngajat` e `true` - o proprietate computed
+   peste `ISessionService`, notificata la `CurrentUserChanged`, echivalenta
+   cu `PoateAdministra` expus de fiecare ViewModel de aici.
 2. Chiar daca acel meniu ar fi ascuns dintr-o eroare de navigare, mutatiile/
    citirile raman sigure: `IAdminService`/`IOrderService`/`IStockService`/
    `IReportService` verifica independent `EsteAngajat` la fiecare operatie
    relevanta, deci UI-ul nu e singura linie de aparare.
-3. Cu asta, tot ce era listat ca "pas viitor" in README-urile anterioare
-   (vizualizarea/schimbarea starii comenzilor de catre angajati, actualizarea
-   automata a stocului la "se pregateste", generarea de rapoarte) e
-   implementat. Ce ramane cu
-   adevarat viitor e doar navigarea/shell-ul propriu-zis (`MainWindowViewModel`)
-   care leaga toate ecranele deja existente intr-o singura aplicatie
-   navigabila.
