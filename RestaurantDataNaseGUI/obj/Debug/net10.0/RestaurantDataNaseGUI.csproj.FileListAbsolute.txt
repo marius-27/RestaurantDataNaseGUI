@@ -306,3 +306,4 @@
 /home/mmarius/Documents/Programming/C#/Restaurant/RestaurantDataNaseGUI/obj/Debug/net10.0/RestaurantDataNaseGUI.pdb
 /home/mmarius/Documents/Programming/C#/Restaurant/RestaurantDataNaseGUI/obj/Debug/net10.0/RestaurantDataNaseGUI.genruntimeconfig.cache
 /home/mmarius/Documents/Programming/C#/Restaurant/RestaurantDataNaseGUI/obj/Debug/net10.0/ref/RestaurantDataNaseGUI.dll
+/home/mmarius/Documents/Programming/C#/Restaurant/RestaurantDataNaseGUI/bin/Debug/net10.0/appsettings.Development.json
