@@ -1,0 +1,81 @@
+# O singura replica: SQL Server nu se scaleaza orizontal fara solutii
+# enterprise (Always On Availability Groups etc.), inutile pentru o tema -
+# o singura instanta e suficienta. strategy: Recreate (nu RollingUpdate,
+# implicitul pentru Deployment) fiindca PVC-ul e ReadWriteOnce: un rolling
+# update ar incerca sa porneasca al doilea pod (cu noua versiune) inainte
+# sa opreasca primul, iar al doilea nu ar putea monta acelasi volum RWO -
+# ramane blocat in Pending. Recreate opreste intai pod-ul vechi.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sqlserver
+  namespace: restaurant-datanase
+  labels:
+    app: sqlserver
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: sqlserver
+  template:
+    metadata:
+      labels:
+        app: sqlserver
+    spec:
+      containers:
+        - name: sqlserver
+          image: mcr.microsoft.com/mssql/server:2022-latest
+          ports:
+            - containerPort: 1433
+              name: tds
+          env:
+            - name: ACCEPT_EULA
+              value: "Y"
+            - name: MSSQL_SA_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: sqlserver-credentials
+                  key: MSSQL_SA_PASSWORD
+          volumeMounts:
+            - name: sqlserver-data
+              mountPath: /var/opt/mssql
+          resources:
+            requests:
+              memory: "2Gi"
+              cpu: "1"
+            limits:
+              memory: "4Gi"
+              cpu: "2"
+          # Acelasi test ca healthcheck-ul din docker/docker-compose.yml:
+          # incearca sqlcmd din mssql-tools18 (imaginea 2022 curenta), cade
+          # pe calea veche mssql-tools daca nu exista.
+          readinessProbe:
+            exec:
+              command:
+                - /bin/bash
+                - -c
+                - >-
+                  /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$MSSQL_SA_PASSWORD" -C -Q 'SELECT 1' -b -o /dev/null 2>/dev/null ||
+                  /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P "$MSSQL_SA_PASSWORD" -Q 'SELECT 1' -b -o /dev/null
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+          livenessProbe:
+            exec:
+              command:
+                - /bin/bash
+                - -c
+                - >-
+                  /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$MSSQL_SA_PASSWORD" -C -Q 'SELECT 1' -b -o /dev/null 2>/dev/null ||
+                  /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P "$MSSQL_SA_PASSWORD" -Q 'SELECT 1' -b -o /dev/null
+            initialDelaySeconds: 30
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 6
+      volumes:
+        - name: sqlserver-data
+          persistentVolumeClaim:
+            claimName: sqlserver-data

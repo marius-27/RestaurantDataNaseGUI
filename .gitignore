@@ -1,3 +1,4 @@
 # Configurare locala cu secrete - nu se comite
 RestaurantDataNaseGUI/appsettings.Development.json
 docker/.env
+k8s/secret.local.yaml

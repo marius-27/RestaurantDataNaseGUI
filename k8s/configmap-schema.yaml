@@ -1,0 +1,639 @@
+# ConfigMap generat din database/schema.sql si docker/create-app-user.sql,
+# folosit de k8s/init-job.yaml (montat ca fisiere in /scripts). Daca oricare
+# dintre cele doua fisiere sursa se modifica, regenereaza acest ConfigMap cu:
+#
+#   kubectl create configmap sqlserver-init-scripts \
+#     --namespace restaurant-datanase \
+#     --from-file=schema.sql=database/schema.sql \
+#     --from-file=create-app-user.sql=docker/create-app-user.sql \
+#     --dry-run=client -o yaml > k8s/configmap-schema.yaml
+#
+# (limita K8s pentru un ConfigMap e 1MiB - schema.sql + create-app-user.sql
+# insumeaza cateva zeci de KB, cu mult sub limita)
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sqlserver-init-scripts
+  namespace: restaurant-datanase
+data:
+  schema.sql: |
+    /* ============================================================================
+       RestaurantDataNaseGUI - Schema baza de date
+       SQL Server 2022
+       Respecta Forma Normala 3 (3NF):
+         - toate atributele non-cheie depind integral de cheia primara (2NF)
+         - nu exista dependente tranzitive intre atribute non-cheie (3NF)
+       Preturile calculate (ex. pretul unui Meniu) NU sunt stocate ca si coloane,
+       ci se calculeaza dinamic (vezi functia dbo.fn_CalculeazaPretMeniu),
+       pentru a evita date derivate/redundante care ar putea deveni inconsistente.
+       ============================================================================ */
+    
+    /* ----------------------------------------------------------------------
+       0. (Optional) Creare baza de date
+       ---------------------------------------------------------------------- */
+    IF DB_ID(N'RestaurantDataNase') IS NULL
+    BEGIN
+        CREATE DATABASE RestaurantDataNase;
+    END
+    GO
+    
+    USE RestaurantDataNase;
+    GO
+    
+    /* ----------------------------------------------------------------------
+       1. Curatare (drop in ordine inversa dependentelor) - pentru rulari repetate
+       ---------------------------------------------------------------------- */
+    IF OBJECT_ID(N'dbo.sp_GetMeniuRestaurantCuAlergeni', N'P') IS NOT NULL DROP PROCEDURE dbo.sp_GetMeniuRestaurantCuAlergeni;
+    IF OBJECT_ID(N'dbo.sp_SetPreparatIndisponibil', N'P') IS NOT NULL DROP PROCEDURE dbo.sp_SetPreparatIndisponibil;
+    IF OBJECT_ID(N'dbo.sp_GetPreparateApropiateDeEpuizare', N'P') IS NOT NULL DROP PROCEDURE dbo.sp_GetPreparateApropiateDeEpuizare;
+    IF OBJECT_ID(N'dbo.sp_GetComenziClientCuDetalii', N'P') IS NOT NULL DROP PROCEDURE dbo.sp_GetComenziClientCuDetalii;
+    IF OBJECT_ID(N'dbo.sp_UpdateCantitateTotalaLaComanda', N'P') IS NOT NULL DROP PROCEDURE dbo.sp_UpdateCantitateTotalaLaComanda;
+    IF OBJECT_ID(N'dbo.sp_AdaugaDetaliuComanda', N'P') IS NOT NULL DROP PROCEDURE dbo.sp_AdaugaDetaliuComanda;
+    IF OBJECT_ID(N'dbo.sp_CreateComanda', N'P') IS NOT NULL DROP PROCEDURE dbo.sp_CreateComanda;
+    IF OBJECT_ID(N'dbo.fn_CalculeazaPretMeniu', N'FN') IS NOT NULL DROP FUNCTION dbo.fn_CalculeazaPretMeniu;
+    
+    IF OBJECT_ID(N'dbo.ComandaDetaliu', N'U') IS NOT NULL DROP TABLE dbo.ComandaDetaliu;
+    IF OBJECT_ID(N'dbo.Comanda', N'U') IS NOT NULL DROP TABLE dbo.Comanda;
+    IF OBJECT_ID(N'dbo.StareComanda', N'U') IS NOT NULL DROP TABLE dbo.StareComanda;
+    IF OBJECT_ID(N'dbo.Utilizator', N'U') IS NOT NULL DROP TABLE dbo.Utilizator;
+    IF OBJECT_ID(N'dbo.MeniuPreparat', N'U') IS NOT NULL DROP TABLE dbo.MeniuPreparat;
+    IF OBJECT_ID(N'dbo.Meniu', N'U') IS NOT NULL DROP TABLE dbo.Meniu;
+    IF OBJECT_ID(N'dbo.PreparatImagine', N'U') IS NOT NULL DROP TABLE dbo.PreparatImagine;
+    IF OBJECT_ID(N'dbo.PreparatAlergen', N'U') IS NOT NULL DROP TABLE dbo.PreparatAlergen;
+    IF OBJECT_ID(N'dbo.Preparat', N'U') IS NOT NULL DROP TABLE dbo.Preparat;
+    IF OBJECT_ID(N'dbo.Alergen', N'U') IS NOT NULL DROP TABLE dbo.Alergen;
+    IF OBJECT_ID(N'dbo.Categorie', N'U') IS NOT NULL DROP TABLE dbo.Categorie;
+    IF OBJECT_ID(N'dbo.Configurare', N'U') IS NOT NULL DROP TABLE dbo.Configurare;
+    GO
+    
+    /* ----------------------------------------------------------------------
+       2. Tabele de baza / lookup
+       ---------------------------------------------------------------------- */
+    
+    CREATE TABLE dbo.Categorie
+    (
+        Id          INT IDENTITY(1,1)  NOT NULL,
+        Denumire    NVARCHAR(100)      NOT NULL,
+        CONSTRAINT PK_Categorie PRIMARY KEY CLUSTERED (Id),
+        CONSTRAINT UQ_Categorie_Denumire UNIQUE (Denumire)
+    );
+    GO
+    
+    CREATE TABLE dbo.Alergen
+    (
+        Id          INT IDENTITY(1,1)  NOT NULL,
+        Denumire    NVARCHAR(100)      NOT NULL,
+        CONSTRAINT PK_Alergen PRIMARY KEY CLUSTERED (Id),
+        CONSTRAINT UQ_Alergen_Denumire UNIQUE (Denumire)
+    );
+    GO
+    
+    -- Configuratii generale ale aplicatiei (ex. procent discount la meniuri),
+    -- folosite pentru a nu "hardcoda" valori in proceduri.
+    CREATE TABLE dbo.Configurare
+    (
+        Id          INT IDENTITY(1,1)  NOT NULL,
+        Cheie       NVARCHAR(100)      NOT NULL,
+        Valoare     NVARCHAR(100)      NOT NULL,
+        Descriere   NVARCHAR(255)      NULL,
+        CONSTRAINT PK_Configurare PRIMARY KEY CLUSTERED (Id),
+        CONSTRAINT UQ_Configurare_Cheie UNIQUE (Cheie)
+    );
+    GO
+    
+    -- Lookup pentru starile posibile ale unei comenzi (evita un varchar liber
+    -- pe Comanda si permite extinderea usoara a starilor).
+    CREATE TABLE dbo.StareComanda
+    (
+        Id          INT IDENTITY(1,1)  NOT NULL,
+        Denumire    NVARCHAR(50)       NOT NULL,
+        CONSTRAINT PK_StareComanda PRIMARY KEY CLUSTERED (Id),
+        CONSTRAINT UQ_StareComanda_Denumire UNIQUE (Denumire)
+    );
+    GO
+    
+    /* ----------------------------------------------------------------------
+       3. Preparat si tabelele asociate (imagini, alergeni)
+       ---------------------------------------------------------------------- */
+    
+    CREATE TABLE dbo.Preparat
+    (
+        Id                          INT IDENTITY(1,1)  NOT NULL,
+        Denumire                    NVARCHAR(150)       NOT NULL,
+        Pret                        DECIMAL(10,2)       NOT NULL,
+        CantitatePortie             DECIMAL(10,2)       NOT NULL,
+        UnitateMasura               NVARCHAR(20)        NOT NULL,   -- ex: 'g', 'ml', 'buc'
+        CantitateTotalaRestaurant   DECIMAL(10,2)        NOT NULL,   -- stoc curent, in aceeasi unitate de masura
+        CategorieId                 INT                 NOT NULL,
+        Disponibil                  BIT                 NOT NULL CONSTRAINT DF_Preparat_Disponibil DEFAULT (1),
+        CONSTRAINT PK_Preparat PRIMARY KEY CLUSTERED (Id),
+        CONSTRAINT FK_Preparat_Categorie FOREIGN KEY (CategorieId) REFERENCES dbo.Categorie (Id),
+        CONSTRAINT CK_Preparat_Pret CHECK (Pret > 0),
+        CONSTRAINT CK_Preparat_CantitatePortie CHECK (CantitatePortie > 0),
+        CONSTRAINT CK_Preparat_CantitateTotalaRestaurant CHECK (CantitateTotalaRestaurant >= 0)
+    );
+    GO
+    
+    CREATE INDEX IX_Preparat_CategorieId ON dbo.Preparat (CategorieId);
+    GO
+    
+    -- Relatie many-to-many Preparat <-> Alergen
+    CREATE TABLE dbo.PreparatAlergen
+    (
+        PreparatId  INT NOT NULL,
+        AlergenId   INT NOT NULL,
+        CONSTRAINT PK_PreparatAlergen PRIMARY KEY CLUSTERED (PreparatId, AlergenId),
+        CONSTRAINT FK_PreparatAlergen_Preparat FOREIGN KEY (PreparatId) REFERENCES dbo.Preparat (Id) ON DELETE CASCADE,
+        CONSTRAINT FK_PreparatAlergen_Alergen  FOREIGN KEY (AlergenId)  REFERENCES dbo.Alergen (Id)  ON DELETE CASCADE
+    );
+    GO
+    
+    CREATE INDEX IX_PreparatAlergen_AlergenId ON dbo.PreparatAlergen (AlergenId);
+    GO
+    
+    -- Un preparat poate avea mai multe imagini (1 - N)
+    CREATE TABLE dbo.PreparatImagine
+    (
+        Id          INT IDENTITY(1,1)  NOT NULL,
+        PreparatId  INT                 NOT NULL,
+        CalePoza    NVARCHAR(500)       NOT NULL,
+        CONSTRAINT PK_PreparatImagine PRIMARY KEY CLUSTERED (Id),
+        CONSTRAINT FK_PreparatImagine_Preparat FOREIGN KEY (PreparatId) REFERENCES dbo.Preparat (Id) ON DELETE CASCADE
+    );
+    GO
+    
+    CREATE INDEX IX_PreparatImagine_PreparatId ON dbo.PreparatImagine (PreparatId);
+    GO
+    
+    /* ----------------------------------------------------------------------
+       4. Meniu (compus din preparate, pret calculat dinamic)
+       ---------------------------------------------------------------------- */
+    
+    CREATE TABLE dbo.Meniu
+    (
+        Id              INT IDENTITY(1,1)  NOT NULL,
+        Denumire        NVARCHAR(150)       NOT NULL,
+        CategorieId     INT                 NOT NULL,
+        CONSTRAINT PK_Meniu PRIMARY KEY CLUSTERED (Id),
+        CONSTRAINT FK_Meniu_Categorie FOREIGN KEY (CategorieId) REFERENCES dbo.Categorie (Id)
+        -- NOTA: NU exista o coloana "Pret" aici in mod intentionat.
+        -- Pretul se calculeaza dinamic din preparatele componente minus discountul
+        -- din Configurare -> vezi functia dbo.fn_CalculeazaPretMeniu.
+    );
+    GO
+    
+    CREATE INDEX IX_Meniu_CategorieId ON dbo.Meniu (CategorieId);
+    GO
+    
+    -- Relatie many-to-many Meniu <-> Preparat, cu cantitate specifica per meniu
+    CREATE TABLE dbo.MeniuPreparat
+    (
+        MeniuId             INT             NOT NULL,
+        PreparatId          INT             NOT NULL,
+        CantitateInMeniu    DECIMAL(10,2)   NOT NULL,
+        CONSTRAINT PK_MeniuPreparat PRIMARY KEY CLUSTERED (MeniuId, PreparatId),
+        CONSTRAINT FK_MeniuPreparat_Meniu    FOREIGN KEY (MeniuId)    REFERENCES dbo.Meniu (Id)    ON DELETE CASCADE,
+        CONSTRAINT FK_MeniuPreparat_Preparat FOREIGN KEY (PreparatId) REFERENCES dbo.Preparat (Id)  ON DELETE NO ACTION,
+        CONSTRAINT CK_MeniuPreparat_Cantitate CHECK (CantitateInMeniu > 0)
+    );
+    GO
+    
+    CREATE INDEX IX_MeniuPreparat_PreparatId ON dbo.MeniuPreparat (PreparatId);
+    GO
+    
+    /* ----------------------------------------------------------------------
+       5. Utilizator
+       ---------------------------------------------------------------------- */
+    
+    CREATE TABLE dbo.Utilizator
+    (
+        Id              INT IDENTITY(1,1)  NOT NULL,
+        Nume            NVARCHAR(100)       NOT NULL,
+        Prenume         NVARCHAR(100)       NOT NULL,
+        Email           NVARCHAR(256)       NOT NULL,
+        Telefon         NVARCHAR(20)        NOT NULL,
+        AdresaLivrare   NVARCHAR(300)       NULL,   -- optionala, ex. pentru Angajat
+        ParolaHash      NVARCHAR(255)       NOT NULL,
+        TipUtilizator   NVARCHAR(20)        NOT NULL,
+        CONSTRAINT PK_Utilizator PRIMARY KEY CLUSTERED (Id),
+        CONSTRAINT UQ_Utilizator_Email UNIQUE (Email),
+        CONSTRAINT CK_Utilizator_TipUtilizator CHECK (TipUtilizator IN (N'Client', N'Angajat')),
+        CONSTRAINT CK_Utilizator_Email CHECK (Email LIKE '%_@__%.__%')
+    );
+    GO
+    
+    /* ----------------------------------------------------------------------
+       6. Comanda si ComandaDetaliu
+       ---------------------------------------------------------------------- */
+    
+    CREATE TABLE dbo.Comanda
+    (
+        Id                      INT IDENTITY(1,1)  NOT NULL,
+        CodUnic                 VARCHAR(20)         NOT NULL,
+        UtilizatorId            INT                 NOT NULL,
+        DataComanda             DATETIME2           NOT NULL CONSTRAINT DF_Comanda_DataComanda DEFAULT (SYSUTCDATETIME()),
+        StareId                 INT                 NOT NULL,
+        CostTransport           DECIMAL(10,2)       NOT NULL CONSTRAINT DF_Comanda_CostTransport DEFAULT (0),
+        Discount                DECIMAL(5,2)        NOT NULL CONSTRAINT DF_Comanda_Discount DEFAULT (0),
+        OraEstimataLivrare      DATETIME2           NULL,
+        CONSTRAINT PK_Comanda PRIMARY KEY CLUSTERED (Id),
+        CONSTRAINT UQ_Comanda_CodUnic UNIQUE (CodUnic),
+        CONSTRAINT FK_Comanda_Utilizator FOREIGN KEY (UtilizatorId) REFERENCES dbo.Utilizator (Id),
+        CONSTRAINT FK_Comanda_StareComanda FOREIGN KEY (StareId) REFERENCES dbo.StareComanda (Id),
+        CONSTRAINT CK_Comanda_CostTransport CHECK (CostTransport >= 0),
+        CONSTRAINT CK_Comanda_Discount CHECK (Discount >= 0 AND Discount <= 100)
+    );
+    GO
+    
+    CREATE INDEX IX_Comanda_UtilizatorId ON dbo.Comanda (UtilizatorId);
+    CREATE INDEX IX_Comanda_StareId ON dbo.Comanda (StareId);
+    GO
+    
+    -- O linie de comanda se refera fie la un Preparat, fie la un Meniu (niciodata ambele/niciunul)
+    CREATE TABLE dbo.ComandaDetaliu
+    (
+        Id                      INT IDENTITY(1,1)  NOT NULL,
+        ComandaId               INT                 NOT NULL,
+        PreparatId              INT                 NULL,
+        MeniuId                 INT                 NULL,
+        Cantitate               DECIMAL(10,2)       NOT NULL,
+        PretUnitarLaComanda     DECIMAL(10,2)       NOT NULL,  -- snapshot istoric al pretului la momentul comenzii
+        CONSTRAINT PK_ComandaDetaliu PRIMARY KEY CLUSTERED (Id),
+        CONSTRAINT FK_ComandaDetaliu_Comanda  FOREIGN KEY (ComandaId)  REFERENCES dbo.Comanda (Id)  ON DELETE CASCADE,
+        CONSTRAINT FK_ComandaDetaliu_Preparat FOREIGN KEY (PreparatId) REFERENCES dbo.Preparat (Id),
+        CONSTRAINT FK_ComandaDetaliu_Meniu    FOREIGN KEY (MeniuId)    REFERENCES dbo.Meniu (Id),
+        CONSTRAINT CK_ComandaDetaliu_Cantitate CHECK (Cantitate > 0),
+        CONSTRAINT CK_ComandaDetaliu_PretUnitar CHECK (PretUnitarLaComanda > 0),
+        CONSTRAINT CK_ComandaDetaliu_PreparatSauMeniu CHECK (
+            (PreparatId IS NOT NULL AND MeniuId IS NULL) OR
+            (PreparatId IS NULL AND MeniuId IS NOT NULL)
+        )
+    );
+    GO
+    
+    CREATE INDEX IX_ComandaDetaliu_ComandaId  ON dbo.ComandaDetaliu (ComandaId);
+    CREATE INDEX IX_ComandaDetaliu_PreparatId ON dbo.ComandaDetaliu (PreparatId);
+    CREATE INDEX IX_ComandaDetaliu_MeniuId    ON dbo.ComandaDetaliu (MeniuId);
+    GO
+    
+    /* ----------------------------------------------------------------------
+       7. Date seed minime (lookup-uri si configurare)
+       ---------------------------------------------------------------------- */
+    
+    INSERT INTO dbo.StareComanda (Denumire) VALUES
+        (N'inregistrata'),
+        (N'se pregateste'),
+        (N'a plecat la client'),
+        (N'livrata'),
+        (N'anulata');
+    GO
+    
+    INSERT INTO dbo.Configurare (Cheie, Valoare, Descriere) VALUES
+        (N'DiscountMeniuProcent',        N'10',  N'Procent de discount aplicat la suma preparatelor componente pentru a obtine pretul unui Meniu'),
+        (N'SumaMinimaComandaDiscount',   N'100', N'Suma minima a unei comenzi (in lei) peste care se aplica discountul de frecventa'),
+        (N'NumarComenziPentruDiscount',  N'5',   N'Numarul de comenzi plasate in IntervalTimpDiscount zile necesar pentru a deveni client frecvent'),
+        (N'IntervalTimpDiscount',        N'30',  N'Intervalul de timp (in zile) in care se numara comenzile pentru discountul de frecventa'),
+        (N'ProcentDiscountFrecventa',    N'5',   N'Procent de discount aplicat comenzilor clientilor frecventi'),
+        (N'PragTransportGratuit',        N'150', N'Suma (in lei) peste care transportul este gratuit'),
+        (N'CostTransport',               N'15',  N'Costul standard al transportului (in lei), aplicat sub PragTransportGratuit'),
+        (N'PragStocEpuizare',            N'10',  N'Prag implicit de cantitate in stoc sub care un preparat este considerat aproape de epuizare');
+    GO
+    
+    /* ============================================================================
+       8. Functie: calcul dinamic pret Meniu
+       ============================================================================ */
+    
+    CREATE FUNCTION dbo.fn_CalculeazaPretMeniu (@MeniuId INT)
+    RETURNS DECIMAL(10,2)
+    AS
+    BEGIN
+        DECLARE @PretBrut DECIMAL(10,2);
+        DECLARE @DiscountProcent DECIMAL(5,2);
+    
+        SELECT @PretBrut = SUM(p.Pret * mp.CantitateInMeniu)
+        FROM dbo.MeniuPreparat mp
+        INNER JOIN dbo.Preparat p ON p.Id = mp.PreparatId
+        WHERE mp.MeniuId = @MeniuId;
+    
+        SELECT @DiscountProcent = TRY_CAST(Valoare AS DECIMAL(5,2))
+        FROM dbo.Configurare
+        WHERE Cheie = N'DiscountMeniuProcent';
+    
+        IF @PretBrut IS NULL SET @PretBrut = 0;
+        IF @DiscountProcent IS NULL SET @DiscountProcent = 0;
+    
+        RETURN ROUND(@PretBrut * (1 - @DiscountProcent / 100.0), 2);
+    END
+    GO
+    
+    /* ============================================================================
+       9. Proceduri stocate
+       ============================================================================ */
+    
+    /* -----------------------------------------------------------------------
+       sp_CreateComanda
+       Creeaza antetul unei comenzi noi (starea initiala = 'inregistrata') si
+       genereaza un cod unic pentru aceasta. Liniile de comanda se adauga
+       ulterior cu sp_AdaugaDetaliuComanda.
+       ----------------------------------------------------------------------- */
+    CREATE PROCEDURE dbo.sp_CreateComanda
+        @UtilizatorId       INT,
+        @CostTransport      DECIMAL(10,2) = 0,
+        @Discount            DECIMAL(5,2)  = 0,
+        @ComandaId          INT OUTPUT,
+        @CodUnic            VARCHAR(20) OUTPUT
+    AS
+    BEGIN
+        SET NOCOUNT ON;
+    
+        IF NOT EXISTS (SELECT 1 FROM dbo.Utilizator WHERE Id = @UtilizatorId)
+        BEGIN
+            RAISERROR(N'Utilizatorul specificat nu exista.', 16, 1);
+            RETURN;
+        END
+    
+        DECLARE @StareInregistrataId INT =
+            (SELECT Id FROM dbo.StareComanda WHERE Denumire = N'inregistrata');
+    
+        DECLARE @Cod VARCHAR(20) =
+            CONCAT('CMD-', FORMAT(SYSUTCDATETIME(), 'yyyyMMddHHmmss'),
+                   RIGHT('000' + CAST(ABS(CHECKSUM(NEWID())) % 1000 AS VARCHAR(3)), 3));
+    
+        INSERT INTO dbo.Comanda (CodUnic, UtilizatorId, DataComanda, StareId, CostTransport, Discount, OraEstimataLivrare)
+        VALUES (@Cod, @UtilizatorId, SYSUTCDATETIME(), @StareInregistrataId, @CostTransport, @Discount, NULL);
+    
+        SET @ComandaId = SCOPE_IDENTITY();
+        SET @CodUnic = @Cod;
+    END
+    GO
+    
+    /* -----------------------------------------------------------------------
+       sp_AdaugaDetaliuComanda
+       Adauga o linie intr-o comanda existenta - fie pentru un Preparat, fie
+       pentru un Meniu (exact unul dintre cei doi parametri trebuie completat).
+       Pretul unitar este preluat "snapshot" (Preparat.Pret sau pretul calculat
+       dinamic al Meniului) astfel incat istoricul comenzii sa ramana corect
+       chiar daca preturile se modifica ulterior.
+       ----------------------------------------------------------------------- */
+    CREATE PROCEDURE dbo.sp_AdaugaDetaliuComanda
+        @ComandaId  INT,
+        @PreparatId INT = NULL,
+        @MeniuId    INT = NULL,
+        @Cantitate  DECIMAL(10,2)
+    AS
+    BEGIN
+        SET NOCOUNT ON;
+    
+        IF (@PreparatId IS NULL AND @MeniuId IS NULL) OR (@PreparatId IS NOT NULL AND @MeniuId IS NOT NULL)
+        BEGIN
+            RAISERROR(N'Trebuie specificat exact unul dintre @PreparatId sau @MeniuId.', 16, 1);
+            RETURN;
+        END
+    
+        IF NOT EXISTS (SELECT 1 FROM dbo.Comanda WHERE Id = @ComandaId)
+        BEGIN
+            RAISERROR(N'Comanda specificata nu exista.', 16, 1);
+            RETURN;
+        END
+    
+        DECLARE @PretUnitar DECIMAL(10,2);
+    
+        IF @PreparatId IS NOT NULL
+        BEGIN
+            SELECT @PretUnitar = Pret
+            FROM dbo.Preparat
+            WHERE Id = @PreparatId AND Disponibil = 1;
+        END
+        ELSE
+        BEGIN
+            IF NOT EXISTS (SELECT 1 FROM dbo.Meniu WHERE Id = @MeniuId)
+                SET @PretUnitar = NULL;
+            ELSE
+                SET @PretUnitar = dbo.fn_CalculeazaPretMeniu(@MeniuId);
+        END
+    
+        IF @PretUnitar IS NULL
+        BEGIN
+            RAISERROR(N'Preparatul/Meniul specificat nu exista sau nu este disponibil.', 16, 1);
+            RETURN;
+        END
+    
+        INSERT INTO dbo.ComandaDetaliu (ComandaId, PreparatId, MeniuId, Cantitate, PretUnitarLaComanda)
+        VALUES (@ComandaId, @PreparatId, @MeniuId, @Cantitate, @PretUnitar);
+    END
+    GO
+    
+    /* -----------------------------------------------------------------------
+       sp_UpdateCantitateTotalaLaComanda   [interogare complexa: CTE + UNION + JOIN]
+       Scade din stocul preparatelor (Preparat.CantitateTotalaRestaurant)
+       cantitatile consumate de o comanda - atat din liniile care refera direct
+       un Preparat, cat si din liniile care refera un Meniu (in acest caz se
+       calculeaza consumul fiecarui preparat component prin MeniuPreparat).
+       ----------------------------------------------------------------------- */
+    CREATE PROCEDURE dbo.sp_UpdateCantitateTotalaLaComanda
+        @ComandaId INT
+    AS
+    BEGIN
+        SET NOCOUNT ON;
+    
+        IF NOT EXISTS (SELECT 1 FROM dbo.Comanda WHERE Id = @ComandaId)
+        BEGIN
+            RAISERROR(N'Comanda specificata nu exista.', 16, 1);
+            RETURN;
+        END
+    
+        BEGIN TRANSACTION;
+        BEGIN TRY
+            ;WITH ConsumPreparate AS (
+                SELECT cd.PreparatId AS PreparatId, cd.Cantitate AS CantitateConsumata
+                FROM dbo.ComandaDetaliu cd
+                WHERE cd.ComandaId = @ComandaId AND cd.PreparatId IS NOT NULL
+    
+                UNION ALL
+    
+                SELECT mp.PreparatId, mp.CantitateInMeniu * cd.Cantitate
+                FROM dbo.ComandaDetaliu cd
+                INNER JOIN dbo.MeniuPreparat mp ON mp.MeniuId = cd.MeniuId
+                WHERE cd.ComandaId = @ComandaId AND cd.MeniuId IS NOT NULL
+            ),
+            ConsumTotal AS (
+                SELECT PreparatId, SUM(CantitateConsumata) AS CantitateTotala
+                FROM ConsumPreparate
+                GROUP BY PreparatId
+            )
+            UPDATE p
+            SET p.CantitateTotalaRestaurant = p.CantitateTotalaRestaurant - ct.CantitateTotala
+            FROM dbo.Preparat p
+            INNER JOIN ConsumTotal ct ON ct.PreparatId = p.Id;
+    
+            IF EXISTS (SELECT 1 FROM dbo.Preparat WHERE CantitateTotalaRestaurant < 0)
+            BEGIN
+                ROLLBACK TRANSACTION;
+                RAISERROR(N'Stoc insuficient pentru unul dintre preparatele din comanda.', 16, 1);
+                RETURN;
+            END
+    
+            COMMIT TRANSACTION;
+        END TRY
+        BEGIN CATCH
+            IF XACT_STATE() <> 0
+                ROLLBACK TRANSACTION;
+            THROW;
+        END CATCH
+    END
+    GO
+    
+    /* -----------------------------------------------------------------------
+       sp_GetComenziClientCuDetalii   [interogare complexa: JOIN multiplu + LEFT JOIN]
+       Returneaza toate comenzile unui client, cu toate liniile de detaliu
+       (preparate si/sau meniuri), starea comenzii si subtotalul fiecarei linii.
+       ----------------------------------------------------------------------- */
+    CREATE PROCEDURE dbo.sp_GetComenziClientCuDetalii
+        @UtilizatorId INT
+    AS
+    BEGIN
+        SET NOCOUNT ON;
+    
+        SELECT
+            c.Id                    AS ComandaId,
+            c.CodUnic,
+            c.DataComanda,
+            sc.Denumire             AS Stare,
+            c.CostTransport,
+            c.Discount,
+            c.OraEstimataLivrare,
+            cd.Id                   AS DetaliuId,
+            CASE WHEN cd.PreparatId IS NOT NULL THEN N'Preparat' ELSE N'Meniu' END AS TipArticol,
+            COALESCE(p.Denumire, m.Denumire) AS DenumireArticol,
+            cd.Cantitate,
+            cd.PretUnitarLaComanda,
+            (cd.Cantitate * cd.PretUnitarLaComanda) AS SubTotal
+        FROM dbo.Comanda c
+        INNER JOIN dbo.StareComanda sc ON sc.Id = c.StareId
+        INNER JOIN dbo.ComandaDetaliu cd ON cd.ComandaId = c.Id
+        LEFT JOIN dbo.Preparat p ON p.Id = cd.PreparatId
+        LEFT JOIN dbo.Meniu m ON m.Id = cd.MeniuId
+        WHERE c.UtilizatorId = @UtilizatorId
+        ORDER BY c.DataComanda DESC, cd.Id;
+    END
+    GO
+    
+    /* -----------------------------------------------------------------------
+       sp_GetPreparateApropiateDeEpuizare
+       Lista preparatelor al caror stoc a scazut sub un prag dat. Daca
+       @PragCantitate nu este specificat explicit, se preia valoarea implicita
+       din dbo.Configurare (cheia PragStocEpuizare) in loc de o valoare
+       hardcodata, util pentru alerte de reaprovizionare.
+       ----------------------------------------------------------------------- */
+    CREATE PROCEDURE dbo.sp_GetPreparateApropiateDeEpuizare
+        @PragCantitate DECIMAL(10,2) = NULL
+    AS
+    BEGIN
+        SET NOCOUNT ON;
+    
+        IF @PragCantitate IS NULL
+        BEGIN
+            SELECT @PragCantitate = TRY_CAST(Valoare AS DECIMAL(10,2))
+            FROM dbo.Configurare
+            WHERE Cheie = N'PragStocEpuizare';
+        END
+    
+        IF @PragCantitate IS NULL
+            SET @PragCantitate = 10;
+    
+        SELECT
+            p.Id,
+            p.Denumire,
+            cat.Denumire AS Categorie,
+            p.CantitateTotalaRestaurant,
+            p.UnitateMasura,
+            p.Disponibil
+        FROM dbo.Preparat p
+        INNER JOIN dbo.Categorie cat ON cat.Id = p.CategorieId
+        WHERE p.CantitateTotalaRestaurant <= @PragCantitate
+        ORDER BY p.CantitateTotalaRestaurant ASC;
+    END
+    GO
+    
+    /* -----------------------------------------------------------------------
+       sp_GetMeniuRestaurantCuAlergeni   [interogare complexa: JOIN multiplu + agregare]
+       Returneaza toate meniurile, pretul lor calculat dinamic si lista de
+       alergeni proveniti din toate preparatele componente.
+       ----------------------------------------------------------------------- */
+    CREATE PROCEDURE dbo.sp_GetMeniuRestaurantCuAlergeni
+    AS
+    BEGIN
+        SET NOCOUNT ON;
+    
+        SELECT
+            m.Id                                AS MeniuId,
+            m.Denumire                          AS Meniu,
+            cat.Denumire                        AS Categorie,
+            dbo.fn_CalculeazaPretMeniu(m.Id)    AS PretCalculat,
+            STRING_AGG(a.Denumire, N', ') WITHIN GROUP (ORDER BY a.Denumire) AS Alergeni
+        FROM dbo.Meniu m
+        INNER JOIN dbo.Categorie cat ON cat.Id = m.CategorieId
+        LEFT JOIN dbo.MeniuPreparat mp ON mp.MeniuId = m.Id
+        LEFT JOIN dbo.PreparatAlergen pa ON pa.PreparatId = mp.PreparatId
+        LEFT JOIN dbo.Alergen a ON a.Id = pa.AlergenId
+        GROUP BY m.Id, m.Denumire, cat.Denumire
+        ORDER BY m.Denumire;
+    END
+    GO
+    
+    /* -----------------------------------------------------------------------
+       sp_SetPreparatIndisponibil
+       Marcheaza un preparat ca indisponibil (soft-delete). Preparatele NU se
+       sterg fizic din baza de date daca au fost deja folosite intr-o comanda -
+       FK-ul din ComandaDetaliu ar esua oricum, fiindca nu exista ON DELETE
+       CASCADE catre Preparat. "Stergerea" unui preparat din aplicatie trebuie
+       tratata la nivel de business logic ca UPDATE Disponibil = 0, nu ca DELETE.
+       ----------------------------------------------------------------------- */
+    CREATE PROCEDURE dbo.sp_SetPreparatIndisponibil
+        @PreparatId INT
+    AS
+    BEGIN
+        SET NOCOUNT ON;
+    
+        IF NOT EXISTS (SELECT 1 FROM dbo.Preparat WHERE Id = @PreparatId)
+        BEGIN
+            RAISERROR(N'Preparatul specificat nu exista.', 16, 1);
+            RETURN;
+        END
+    
+        UPDATE dbo.Preparat
+        SET Disponibil = 0
+        WHERE Id = @PreparatId;
+    END
+    GO
+  create-app-user.sql: |
+    -- Creeaza login-ul si userul dedicat aplicatiei ("marius"), in loc ca
+    -- aplicatia sa se conecteze direct cu "sa" (rezervat administrarii/
+    -- troubleshooting).
+    --
+    -- Parola NU este hardcodata aici - se citeste din variabila sqlcmd
+    -- $(DB_USER_PASSWORD), populata din variabila de mediu DB_USER_PASSWORD
+    -- (vezi docker/.env si docker/init-db.sh):
+    --
+    --   sqlcmd -S localhost -U sa -P "<parola-sa>" \
+    --     -v DB_USER_PASSWORD="$DB_USER_PASSWORD" -i create-app-user.sql
+    --
+    -- Idempotent: poate fi rulat de mai multe ori fara erori.
+    
+    IF NOT EXISTS (SELECT 1 FROM sys.server_principals WHERE name = 'marius')
+    BEGIN
+        CREATE LOGIN marius WITH PASSWORD = '$(DB_USER_PASSWORD)';
+    END
+    GO
+    
+    USE RestaurantDataNase;
+    GO
+    
+    IF NOT EXISTS (SELECT 1 FROM sys.database_principals WHERE name = 'marius')
+    BEGIN
+        CREATE USER marius FOR LOGIN marius;
+    END
+    GO
+    
+    ALTER ROLE db_owner ADD MEMBER marius;
+    GO

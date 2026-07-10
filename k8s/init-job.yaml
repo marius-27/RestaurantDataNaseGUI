@@ -1,0 +1,87 @@
+# Job care ruleaza o singura data: aplica database/schema.sql (montat din
+# ConfigMap-ul sqlserver-init-scripts) si apoi docker/create-app-user.sql
+# (creeaza userul "marius"), impotriva Service-ului "sqlserver" - nu
+# direct catre IP-ul unui pod, ca sa functioneze indiferent cand/daca
+# pod-ul e recreat.
+#
+# Nu exista o dependenta nativa "ruleaza dupa ce X e Ready" intre resurse
+# K8s (in afara de initContainers in acelasi pod) - de-aia containerul
+# insusi asteapta intr-o bucla (max 30 incercari x 5s = 2.5 minute) pana
+# cand sqlcmd reuseste sa se conecteze prin Service, inainte sa ruleze
+# scripturile. Asta face Job-ul rezistent la ordinea in care sunt aplicate
+# manifestele (vezi k8s/README.md).
+#
+# Foloseste aceeasi imagine ca Deployment-ul (nu o imagine separata de
+# tip "sqlcmd tools"), ca sa garanteze exact acelasi binar sqlcmd
+# (mssql-tools18) compatibil cu serverul - override peste entrypoint-ul
+# implicit, ruleaza doar sqlcmd, nu porneste un al doilea SQL Server.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: sqlserver-init
+  namespace: restaurant-datanase
+spec:
+  backoffLimit: 3
+  ttlSecondsAfterFinished: 3600
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: init-db
+          image: mcr.microsoft.com/mssql/server:2022-latest
+          env:
+            - name: MSSQL_SA_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: sqlserver-credentials
+                  key: MSSQL_SA_PASSWORD
+            - name: DB_USER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: sqlserver-credentials
+                  key: DB_USER_PASSWORD
+          command: ["/bin/bash", "-c"]
+          args:
+            - |
+              set -euo pipefail
+
+              SQLCMD_BIN=/opt/mssql-tools18/bin/sqlcmd
+              EXTRA_ARGS="-C"
+              if [ ! -x "$SQLCMD_BIN" ]; then
+                SQLCMD_BIN=/opt/mssql-tools/bin/sqlcmd
+                EXTRA_ARGS=""
+              fi
+
+              echo "Astept ca serviciul 'sqlserver' sa accepte conexiuni..."
+              CONECTAT=0
+              for i in $(seq 1 30); do
+                if "$SQLCMD_BIN" -S sqlserver -U sa -P "$MSSQL_SA_PASSWORD" $EXTRA_ARGS -Q "SELECT 1" -b -o /dev/null 2>/dev/null; then
+                  echo "Conectat."
+                  CONECTAT=1
+                  break
+                fi
+                echo "  ...inca astept ($i/30)"
+                sleep 5
+              done
+
+              if [ "$CONECTAT" -ne 1 ]; then
+                echo "Eroare: SQL Server nu a devenit disponibil la timp." >&2
+                exit 1
+              fi
+
+              echo "Rulez schema.sql..."
+              "$SQLCMD_BIN" -S sqlserver -U sa -P "$MSSQL_SA_PASSWORD" $EXTRA_ARGS -i /scripts/schema.sql
+
+              echo "Rulez create-app-user.sql (creeaza userul 'marius')..."
+              "$SQLCMD_BIN" -S sqlserver -U sa -P "$MSSQL_SA_PASSWORD" $EXTRA_ARGS \
+                -v DB_USER_PASSWORD="$DB_USER_PASSWORD" -i /scripts/create-app-user.sql
+
+              echo "Schema si userul aplicatiei au fost create cu succes."
+          volumeMounts:
+            - name: init-scripts
+              mountPath: /scripts
+              readOnly: true
+      volumes:
+        - name: init-scripts
+          configMap:
+            name: sqlserver-init-scripts
