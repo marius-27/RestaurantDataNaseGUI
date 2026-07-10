@@ -40,7 +40,8 @@ baza de date pe care o foloseste GUI-ul.
 - 21 de preparate distribuite pe toate categoriile, cu alergeni asociati unde
   are sens; cateva marcate `Disponibil = false`, si 3 cu stoc sub pragul de
   epuizare (`PragStocEpuizare` din `dbo.Configurare`), ca sa poti demonstra
-  alerta de stoc pentru angajat.
+  alerta de stoc pentru angajat. Fiecare preparat are si o poza (vezi
+  "Imagini" mai jos).
 - 4 meniuri compuse din preparatele de mai sus.
 - 3 comenzi de test pentru `client1@test.ro`, in stari diferite
   (`inregistrata`, `se pregateste`, `livrata`), ca sa poti demonstra
@@ -52,6 +53,22 @@ Scriptul verifica, dupa denumire/email, ce exista deja in baza de date si
 sare peste entitatile deja create - poate fi rulat de mai multe ori fara sa
 duplice date. Comenzile de test se genereaza o singura data (daca
 `client1@test.ro` are deja comenzi, pasul e omis in intregime).
+
+## Imagini
+
+`Images/` contine cate o poza per preparat (`Images/CREDITS.md` are sursa,
+autorul si licenta fiecarui fisier - toate de pe Wikimedia Commons, continut
+liber licentiat, descarcat o singura data pentru uz local de demo). Scriptul
+seteaza `PreparatFormDto.ImaginiPaths` cu **calea absoluta** catre fisierul
+corespunzator din acest folder (rezolvata relativ la directorul curent, deci
+ruleaza `dotnet run` din `tools/SeedData`, nu din alt folder) - `Preparat`
+este singura entitate cu suport de imagini in schema actuala
+(`dbo.PreparatImagine`); `Meniu` nu are (nici coloana, nici tabel), asa ca
+meniurile compuse raman fara poza proprie in `MenuService`.
+
+Daca un preparat a fost creat de o rulare anterioara (inainte sa existe
+aceasta functionalitate) si inca nu are nicio imagine, o rulare noua
+completeaza doar poza, fara sa atinga restul campurilor.
 
 ## Nota despre contul de angajat
 

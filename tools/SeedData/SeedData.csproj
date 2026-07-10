@@ -26,4 +26,11 @@
         </None>
     </ItemGroup>
 
+    <ItemGroup>
+        <!-- Poze demo pentru Preparate (vezi Images/CREDITS.md pentru sursa/licenta
+             fiecarui fisier) - copiate langa executabil, ca fallback de rezolvare
+             a caii daca folderul sursa nu mai e disponibil. -->
+        <None Include="Images\**" CopyToOutputDirectory="PreserveNewest" />
+    </ItemGroup>
+
 </Project>

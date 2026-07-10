@@ -177,46 +177,77 @@ static async Task<Dictionary<string, Preparat>> SeedPreparateAsync(
     var seed = new List<PreparatSeed>
     {
         // Mic dejun
-        new("Omleta cu cascaval", "Mic dejun", 18m, 250m, "g", 3000m, true, new[] { "Oua", "Lactoza" }),
-        new("Clatite cu dulceata", "Mic dejun", 16m, 200m, "g", 2500m, true, new[] { "Gluten", "Oua", "Lactoza" }),
-        new("Sandvis cu sunca si cascaval", "Mic dejun", 15m, 220m, "g", 2800m, true, new[] { "Gluten", "Lactoza" }),
+        new("Omleta cu cascaval", "Mic dejun", 18m, 250m, "g", 3000m, true, new[] { "Oua", "Lactoza" }, "omleta-cu-cascaval.jpg"),
+        new("Clatite cu dulceata", "Mic dejun", 16m, 200m, "g", 2500m, true, new[] { "Gluten", "Oua", "Lactoza" }, "clatite-cu-dulceata.jpg"),
+        new("Sandvis cu sunca si cascaval", "Mic dejun", 15m, 220m, "g", 2800m, true, new[] { "Gluten", "Lactoza" }, "sandvis-cu-sunca-si-cascaval.jpg"),
 
         // Aperitive
-        new("Salata de vinete", "Aperitive", 17m, 250m, "g", 3200m, true, Array.Empty<string>()),
-        new("Bruschete cu rosii si busuioc", "Aperitive", 19m, 220m, "g", 2600m, true, new[] { "Gluten" }),
-        new("Chiftelute de post", "Aperitive", 20m, 250m, "g", 8m, true, new[] { "Gluten", "Soia" }), // sub pragul de epuizare (10)
+        new("Salata de vinete", "Aperitive", 17m, 250m, "g", 3200m, true, Array.Empty<string>(), "salata-de-vinete.jpg"),
+        new("Bruschete cu rosii si busuioc", "Aperitive", 19m, 220m, "g", 2600m, true, new[] { "Gluten" }, "bruschete-cu-rosii-si-busuioc.jpg"),
+        new("Chiftelute de post", "Aperitive", 20m, 250m, "g", 8m, true, new[] { "Gluten", "Soia" }, "chiftelute-de-post.jpg"), // sub pragul de epuizare (10)
 
         // Supe si ciorbe
-        new("Ciorba de burta", "Supe si ciorbe", 22m, 350m, "ml", 4000m, true, new[] { "Gluten", "Oua" }),
-        new("Supa crema de ciuperci", "Supe si ciorbe", 20m, 300m, "ml", 3500m, true, new[] { "Lactoza" }),
-        new("Ciorba radauteana", "Supe si ciorbe", 23m, 350m, "ml", 5m, true, new[] { "Oua", "Lactoza" }), // sub pragul de epuizare
+        new("Ciorba de burta", "Supe si ciorbe", 22m, 350m, "ml", 4000m, true, new[] { "Gluten", "Oua" }, "ciorba-de-burta.jpg"),
+        new("Supa crema de ciuperci", "Supe si ciorbe", 20m, 300m, "ml", 3500m, true, new[] { "Lactoza" }, "supa-crema-de-ciuperci.jpg"),
+        new("Ciorba radauteana", "Supe si ciorbe", 23m, 350m, "ml", 5m, true, new[] { "Oua", "Lactoza" }, "ciorba-radauteana.jpg"), // sub pragul de epuizare
 
         // Fel principal
-        new("Sarmale cu mamaliga", "Fel principal", 35m, 400m, "g", 6000m, true, Array.Empty<string>()),
-        new("Piept de pui la gratar cu legume", "Fel principal", 32m, 350m, "g", 5000m, true, Array.Empty<string>()),
-        new("Paste carbonara", "Fel principal", 28m, 300m, "g", 4200m, true, new[] { "Gluten", "Oua", "Lactoza" }),
-        new("Pizza Margherita", "Fel principal", 30m, 400m, "g", 4500m, true, new[] { "Gluten", "Lactoza" }),
-        new("Somon la cuptor cu legume", "Fel principal", 45m, 300m, "g", 2200m, true, new[] { "Peste" }),
-        new("Mici cu mustar", "Fel principal", 25m, 250m, "g", 3000m, false, Array.Empty<string>()), // indisponibil
+        new("Sarmale cu mamaliga", "Fel principal", 35m, 400m, "g", 6000m, true, Array.Empty<string>(), "sarmale-cu-mamaliga.png"),
+        new("Piept de pui la gratar cu legume", "Fel principal", 32m, 350m, "g", 5000m, true, Array.Empty<string>(), "piept-de-pui-la-gratar-cu-legume.jpg"),
+        new("Paste carbonara", "Fel principal", 28m, 300m, "g", 4200m, true, new[] { "Gluten", "Oua", "Lactoza" }, "paste-carbonara.jpg"),
+        new("Pizza Margherita", "Fel principal", 30m, 400m, "g", 4500m, true, new[] { "Gluten", "Lactoza" }, "pizza-margherita.jpg"),
+        new("Somon la cuptor cu legume", "Fel principal", 45m, 300m, "g", 2200m, true, new[] { "Peste" }, "somon-la-cuptor-cu-legume.jpg"),
+        new("Mici cu mustar", "Fel principal", 25m, 250m, "g", 3000m, false, Array.Empty<string>(), "mici-cu-mustar.jpg"), // indisponibil
 
         // Deserturi
-        new("Tiramisu", "Deserturi", 22m, 200m, "g", 2000m, true, new[] { "Gluten", "Oua", "Lactoza" }),
-        new("Papanasi cu smantana si dulceata", "Deserturi", 24m, 300m, "g", 2500m, true, new[] { "Gluten", "Oua", "Lactoza" }),
-        new("Tarta cu fructe de padure", "Deserturi", 26m, 200m, "g", 1800m, false, new[] { "Gluten", "Oua", "Lactoza" }), // indisponibil
+        new("Tiramisu", "Deserturi", 22m, 200m, "g", 2000m, true, new[] { "Gluten", "Oua", "Lactoza" }, "tiramisu.jpg"),
+        new("Papanasi cu smantana si dulceata", "Deserturi", 24m, 300m, "g", 2500m, true, new[] { "Gluten", "Oua", "Lactoza" }, "papanasi-cu-smantana-si-dulceata.jpg"),
+        new("Tarta cu fructe de padure", "Deserturi", 26m, 200m, "g", 1800m, false, new[] { "Gluten", "Oua", "Lactoza" }, "tarta-cu-fructe-de-padure.jpg"), // indisponibil
 
         // Bauturi
-        new("Limonada de casa", "Bauturi", 15m, 400m, "ml", 6000m, true, Array.Empty<string>()),
-        new("Suc de portocale natural", "Bauturi", 16m, 300m, "ml", 5500m, true, Array.Empty<string>()),
-        new("Cafea espresso", "Bauturi", 15m, 200m, "ml", 9m, true, Array.Empty<string>()), // sub pragul de epuizare
+        new("Limonada de casa", "Bauturi", 15m, 400m, "ml", 6000m, true, Array.Empty<string>(), "limonada-de-casa.jpg"),
+        new("Suc de portocale natural", "Bauturi", 16m, 300m, "ml", 5500m, true, Array.Empty<string>(), "suc-de-portocale-natural.jpg"),
+        new("Cafea espresso", "Bauturi", 15m, 200m, "ml", 9m, true, Array.Empty<string>(), "cafea-espresso.jpg"), // sub pragul de epuizare
     };
 
-    var existente = (await adminService.GetPreparateAsync()).Select(p => p.Denumire).ToHashSet(StringComparer.Ordinal);
+    var imaginiDir = GetImaginiDirectory();
+    var existente = (await adminService.GetPreparateAsync()).ToDictionary(p => p.Denumire, StringComparer.Ordinal);
 
     foreach (var item in seed)
     {
-        if (existente.Contains(item.Denumire))
+        var caleImagine = Path.Combine(imaginiDir, item.ImagineFile);
+
+        if (existente.TryGetValue(item.Denumire, out var preparatExistent))
         {
-            Console.WriteLine($"Preparat '{item.Denumire}' exista deja - se omite.");
+            if (preparatExistent.Imagini.Count > 0)
+            {
+                Console.WriteLine($"Preparat '{item.Denumire}' exista deja - se omite.");
+                continue;
+            }
+
+            // A fost creat de o rulare anterioara a scriptului, inainte sa aiba
+            // imagini asociate - completam doar imaginea, restul campurilor raman neschimbate.
+            var formActualizare = new PreparatFormDto
+            {
+                Id = preparatExistent.Id,
+                Denumire = preparatExistent.Denumire,
+                Pret = preparatExistent.Pret,
+                CantitatePortie = preparatExistent.CantitatePortie,
+                UnitateMasura = preparatExistent.UnitateMasura,
+                CantitateTotalaRestaurant = preparatExistent.CantitateTotalaRestaurant,
+                CategorieId = preparatExistent.CategorieId,
+                Disponibil = preparatExistent.Disponibil,
+                AlergenIds = preparatExistent.PreparatAlergeni.Select(pa => pa.AlergenId).ToList(),
+                ImaginiPaths = new List<string> { caleImagine },
+            };
+
+            var rezultatActualizare = await adminService.ActualizeazaPreparatAsync(formActualizare);
+            if (!rezultatActualizare.Succes)
+            {
+                throw new InvalidOperationException($"Nu s-a putut adauga imaginea la preparatul '{item.Denumire}': {rezultatActualizare.MesajEroare}");
+            }
+
+            Console.WriteLine($"Preparat '{item.Denumire}' exista deja - imagine adaugata.");
             continue;
         }
 
@@ -230,6 +261,7 @@ static async Task<Dictionary<string, Preparat>> SeedPreparateAsync(
             CategorieId = categorii[item.Categorie].Id,
             Disponibil = item.Disponibil,
             AlergenIds = item.Alergeni.Select(a => alergeni[a].Id).ToList(),
+            ImaginiPaths = new List<string> { caleImagine },
         };
 
         var rezultat = await adminService.CreeazaPreparatAsync(form);
@@ -242,6 +274,31 @@ static async Task<Dictionary<string, Preparat>> SeedPreparateAsync(
     }
 
     return (await adminService.GetPreparateAsync()).ToDictionary(p => p.Denumire, StringComparer.Ordinal);
+}
+
+/// <summary>
+/// Locatia folderului cu poze demo (tools/SeedData/Images) - incearca intai
+/// directorul curent (cazul uzual, "dotnet run" din tools/SeedData), apoi
+/// langa executabil (fallback dupa build/publish).
+/// </summary>
+static string GetImaginiDirectory()
+{
+    string[] candidati =
+    {
+        Path.Combine(Directory.GetCurrentDirectory(), "Images"),
+        Path.Combine(AppContext.BaseDirectory, "Images"),
+    };
+
+    foreach (var candidat in candidati)
+    {
+        if (Directory.Exists(candidat))
+        {
+            return candidat;
+        }
+    }
+
+    throw new InvalidOperationException(
+        "Nu s-a gasit folderul cu poze demo (tools/SeedData/Images). Ruleaza 'dotnet run' din folderul tools/SeedData.");
 }
 
 // ----------------------------------------------------------------------
@@ -411,7 +468,7 @@ static string MaskeazaParola(string connectionString) =>
 
 internal sealed record PreparatSeed(
     string Denumire, string Categorie, decimal Pret, decimal CantitatePortie,
-    string UnitateMasura, decimal Stoc, bool Disponibil, string[] Alergeni);
+    string UnitateMasura, decimal Stoc, bool Disponibil, string[] Alergeni, string ImagineFile);
 
 internal sealed record MeniuComponentaSeed(string Preparat, decimal Cantitate);
 
