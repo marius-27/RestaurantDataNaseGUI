@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("RestaurantDataNaseGUI.test")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+124126603ca3e34e84ae152c3edd1703ef12cc42")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+146757d2e5c8eb71b569d88b55aca884e0a89a53")]
 [assembly: System.Reflection.AssemblyProductAttribute("RestaurantDataNaseGUI.test")]
 [assembly: System.Reflection.AssemblyTitleAttribute("RestaurantDataNaseGUI.test")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
