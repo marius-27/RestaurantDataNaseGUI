@@ -13,6 +13,15 @@
     </ItemGroup>
 
     <ItemGroup>
+        <None Include="appsettings.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Include="appsettings.Development.json" Condition="Exists('appsettings.Development.json')">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+
+    <ItemGroup>
         <PackageReference Include="Avalonia" Version="12.0.5"/>
         <PackageReference Include="Avalonia.Desktop" Version="12.0.5"/>
         <PackageReference Include="Avalonia.Themes.Fluent" Version="12.0.5"/>
@@ -21,6 +30,9 @@
             <IncludeAssets Condition="'$(Configuration)' != 'Debug'">None</IncludeAssets>
             <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
         </PackageReference>
+        <PackageReference Include="BCrypt.Net-Next" Version="4.0.3"/>
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.1"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.9"/>
+        <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.9"/>
     </ItemGroup>
 </Project>

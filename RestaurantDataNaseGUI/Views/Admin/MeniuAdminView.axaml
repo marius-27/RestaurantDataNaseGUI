@@ -1,0 +1,102 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:RestaurantDataNaseGUI.ViewModels.Admin"
+             xmlns:models="using:RestaurantDataNaseGUI.Models"
+             xmlns:conv="using:Avalonia.Data.Converters"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="720" d:DesignHeight="800"
+             x:Class="RestaurantDataNaseGUI.Views.Admin.MeniuAdminView"
+             x:Name="Root"
+             x:DataType="vm:MeniuAdminViewModel">
+
+    <Design.DataContext>
+        <!-- Doar pentru previzualizare in IDE. -->
+        <vm:MeniuAdminViewModel/>
+    </Design.DataContext>
+
+    <Grid ColumnDefinitions="380,*" Margin="16">
+        <ScrollViewer Grid.Column="0" Margin="0,0,12,0">
+            <StackPanel Spacing="8">
+                <TextBlock Text="Editare meniu" IsVisible="{Binding EsteEditare}" FontSize="18" FontWeight="Bold"/>
+                <TextBlock Text="Meniu nou" IsVisible="{Binding !EsteEditare}" FontSize="18" FontWeight="Bold"/>
+
+                <TextBlock Text="Denumire"/>
+                <TextBox Text="{Binding Denumire, Mode=TwoWay}"/>
+
+                <TextBlock Text="Categorie"/>
+                <ComboBox ItemsSource="{Binding CategoriiDisponibile}" SelectedItem="{Binding CategorieSelectata, Mode=TwoWay}" HorizontalAlignment="Stretch">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate x:DataType="models:Categorie">
+                            <TextBlock Text="{Binding Denumire}"/>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+
+                <TextBlock Text="Preparate componente" FontWeight="SemiBold" Margin="0,8,0,0"/>
+                <ItemsControl ItemsSource="{Binding Componente}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:MeniuComponentaViewModel">
+                            <Grid ColumnDefinitions="*,Auto,Auto" Margin="0,2">
+                                <TextBlock Grid.Column="0" Text="{Binding Denumire}" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                                <TextBlock Grid.Column="1" Text="{Binding CantitateInMeniu, StringFormat='x{0:0.##}'}"
+                                           VerticalAlignment="Center" Margin="8,0"/>
+                                <Button Grid.Column="2"
+                                        Content="Sterge"
+                                        Command="{Binding DataContext.StergeComponentaCommand, ElementName=Root}"
+                                        CommandParameter="{Binding}"/>
+                            </Grid>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <Grid ColumnDefinitions="*,80,Auto" ColumnSpacing="8" Margin="0,4,0,0">
+                    <ComboBox Grid.Column="0" ItemsSource="{Binding PreparateDisponibile}"
+                              SelectedItem="{Binding PreparatDeAdaugat, Mode=TwoWay}"
+                              PlaceholderText="Preparat" HorizontalAlignment="Stretch">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="models:Preparat">
+                                <TextBlock Text="{Binding Denumire}"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <NumericUpDown Grid.Column="1" Value="{Binding CantitateDeAdaugat, Mode=TwoWay}" Minimum="0" Increment="1" FormatString="0.##"/>
+                    <Button Grid.Column="2" Content="Adauga" Command="{Binding AdaugaComponentaCommand}"/>
+                </Grid>
+
+                <TextBlock Text="{Binding MesajEroare}" Foreground="Red" TextWrapping="Wrap" Margin="0,8,0,0"
+                           IsVisible="{Binding MesajEroare, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}"/>
+
+                <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,8,0,0">
+                    <Button Content="Salveaza" Command="{Binding SalveazaCommand}"/>
+                    <Button Content="Anuleaza" Command="{Binding AnuleazaCommand}" IsVisible="{Binding EsteEditare}"/>
+                    <TextBlock Text="Se salveaza..." IsVisible="{Binding EsteInCurs}" VerticalAlignment="Center" Opacity="0.7"/>
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
+
+        <ScrollViewer Grid.Column="1">
+            <ItemsControl ItemsSource="{Binding Meniuri}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="models:Meniu">
+                        <Border Padding="10" Margin="0,4" BorderBrush="#22808080" BorderThickness="1" CornerRadius="6">
+                            <Grid ColumnDefinitions="*,Auto,Auto">
+                                <StackPanel Grid.Column="0" Spacing="2">
+                                    <TextBlock Text="{Binding Denumire}" FontWeight="SemiBold"/>
+                                    <TextBlock Text="{Binding Categorie.Denumire}" FontSize="11" Opacity="0.7"/>
+                                    <TextBlock Text="{Binding MeniuPreparate.Count, StringFormat='{}{0} preparate componente'}" FontSize="11" Opacity="0.7"/>
+                                </StackPanel>
+                                <Button Grid.Column="1" Content="Editeaza" Margin="4,0" VerticalAlignment="Top"
+                                        Command="{Binding DataContext.SelecteazaPentruEditareCommand, ElementName=Root}"
+                                        CommandParameter="{Binding}"/>
+                                <Button Grid.Column="2" Content="Sterge" VerticalAlignment="Top"
+                                        Command="{Binding DataContext.StergeCommand, ElementName=Root}"
+                                        CommandParameter="{Binding}"/>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

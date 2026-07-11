@@ -1,0 +1,56 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:RestaurantDataNaseGUI.ViewModels.Admin"
+             xmlns:dtos="using:RestaurantDataNaseGUI.Models.DTOs"
+             xmlns:conv="using:Avalonia.Data.Converters"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="600"
+             x:Class="RestaurantDataNaseGUI.Views.Admin.StocEpuizareView"
+             x:Name="Root"
+             x:DataType="vm:StocEpuizareViewModel">
+
+    <Design.DataContext>
+        <!-- Doar pentru previzualizare in IDE. -->
+        <vm:StocEpuizareViewModel/>
+    </Design.DataContext>
+
+    <Grid RowDefinitions="Auto,*" Margin="16">
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="12" Margin="0,0,0,12">
+            <TextBlock Text="Preparate aproape de epuizare" FontSize="22" FontWeight="Bold" VerticalAlignment="Center"/>
+            <TextBlock Text="Se incarca..." IsVisible="{Binding EsteInCurs}" VerticalAlignment="Center" Opacity="0.7"/>
+            <TextBlock Text="{Binding MesajEroare}"
+                       Foreground="Red"
+                       VerticalAlignment="Center"
+                       IsVisible="{Binding MesajEroare, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}"/>
+        </StackPanel>
+
+        <ScrollViewer Grid.Row="1">
+            <StackPanel Spacing="8">
+                <TextBlock Text="Niciun preparat nu e aproape de epuizare." Opacity="0.7"
+                           IsVisible="{Binding NuAreRezultate}"/>
+
+                <ItemsControl ItemsSource="{Binding Preparate}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="dtos:PreparatEpuizareDto">
+                            <Border Padding="10" Margin="0,4" BorderBrush="#33808080" BorderThickness="1" CornerRadius="6">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <StackPanel Grid.Column="0" Spacing="2">
+                                        <TextBlock Text="{Binding Denumire}" FontWeight="SemiBold"/>
+                                        <TextBlock Text="{Binding Categorie}" FontSize="11" Opacity="0.7"/>
+                                        <TextBlock Text="Indisponibil" IsVisible="{Binding !Disponibil}" Foreground="Red" FontSize="11" FontWeight="Bold"/>
+                                    </StackPanel>
+                                    <TextBlock Grid.Column="1"
+                                               Text="{Binding CantitateTotalaRestaurant, StringFormat='{}{0:0.##}'}"
+                                               VerticalAlignment="Center" FontWeight="Bold" Foreground="OrangeRed"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding UnitateMasura}"
+                                               VerticalAlignment="Bottom" Margin="0,0,0,-2" FontSize="10" Opacity="0.7"/>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

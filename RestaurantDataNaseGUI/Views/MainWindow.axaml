@@ -3,11 +3,12 @@
         xmlns:vm="using:RestaurantDataNaseGUI.ViewModels"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="700"
         x:Class="RestaurantDataNaseGUI.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
-        Title="RestaurantDataNaseGUI">
+        Title="RestaurantDataNaseGUI"
+        Width="1100" Height="700">
 
     <Design.DataContext>
         <!-- This only sets the DataContext for the previewer in an IDE,
@@ -15,6 +16,39 @@
         <vm:MainWindowViewModel/>
     </Design.DataContext>
 
-    <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+    <DockPanel>
+        <Border DockPanel.Dock="Left" Width="220" Padding="12" BorderThickness="0,0,1,0" BorderBrush="Gray">
+            <StackPanel Spacing="6">
+                <TextBlock Text="RestaurantDataNase" FontSize="18" FontWeight="Bold" Margin="0,0,0,12"/>
+
+                <Button Content="Meniu Restaurant" Command="{Binding NavigheazaLaMeniuCommand}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"/>
+                <Button Content="Cautare" Command="{Binding NavigheazaLaCautareCommand}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"/>
+
+                <StackPanel IsVisible="{Binding !EsteAutentificat}" Spacing="6" Margin="0,12,0,0">
+                    <Button Content="Login" Command="{Binding NavigheazaLaLoginCommand}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"/>
+                    <Button Content="Creeaza cont" Command="{Binding NavigheazaLaInregistrareCommand}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"/>
+                </StackPanel>
+
+                <StackPanel IsVisible="{Binding EsteClient}" Spacing="6" Margin="0,12,0,0">
+                    <Button Content="Cosul meu" Command="{Binding NavigheazaLaCosCommand}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"/>
+                    <Button Content="Comenzile mele" Command="{Binding NavigheazaLaComenzileMeleCommand}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"/>
+                </StackPanel>
+
+                <StackPanel IsVisible="{Binding EsteAngajat}" Spacing="6" Margin="0,12,0,0">
+                    <Button Content="Categorii" Command="{Binding NavigheazaLaCategoriiCommand}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"/>
+                    <Button Content="Alergeni" Command="{Binding NavigheazaLaAlergeniCommand}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"/>
+                    <Button Content="Preparate" Command="{Binding NavigheazaLaPreparateCommand}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"/>
+                    <Button Content="Meniuri" Command="{Binding NavigheazaLaMeniuriCommand}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"/>
+                    <Button Content="Toate comenzile" Command="{Binding NavigheazaLaToateComenzileCommand}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"/>
+                    <Button Content="Stoc epuizare" Command="{Binding NavigheazaLaStocEpuizareCommand}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"/>
+                    <Button Content="Rapoarte" Command="{Binding NavigheazaLaRapoarteCommand}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"/>
+                </StackPanel>
+
+                <Button Content="Delogare" Command="{Binding DelogareCommand}" IsVisible="{Binding EsteAutentificat}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Margin="0,12,0,0"/>
+            </StackPanel>
+        </Border>
+
+        <ContentControl Content="{Binding CurrentViewModel}" Margin="16"/>
+    </DockPanel>
 
 </Window>

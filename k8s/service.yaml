@@ -1,0 +1,19 @@
+# NodePort (nu ClusterIP) ca sa poata fi accesat direct de pe host, fara
+# port-forward, la testare locala cu minikube/kind (vezi k8s/README.md).
+# In interiorul clusterului, celelalte resurse (k8s/init-job.yaml) se
+# conecteaza tot prin acest Service, folosind numele lui ("sqlserver") ca
+# host DNS - nu direct catre IP-ul pod-ului.
+apiVersion: v1
+kind: Service
+metadata:
+  name: sqlserver
+  namespace: restaurant-datanase
+spec:
+  type: NodePort
+  selector:
+    app: sqlserver
+  ports:
+    - name: tds
+      port: 1433
+      targetPort: 1433
+      nodePort: 30143

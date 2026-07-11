@@ -1,9 +1,12 @@
-## .NET / Rider / Avalonia
+# Configurare locala cu secrete - nu se comite
+RestaurantDataNaseGUI/appsettings.Development.json
+docker/.env
+k8s/secret.local.yaml
+appsettings.Development.json
+
+# Build artifacts .NET / Rider / Avalonia
 bin/
 obj/
 *.user
 .idea/
 .vs/
-
-## appsettings cu date sensibile (tine doar un .example in Git)
-appsettings.Development.json

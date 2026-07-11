@@ -1,0 +1,94 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:RestaurantDataNaseGUI.ViewModels"
+             xmlns:dtos="using:RestaurantDataNaseGUI.Models.DTOs"
+             xmlns:conv="using:Avalonia.Data.Converters"
+             xmlns:convLocal="using:RestaurantDataNaseGUI.Converters"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="480" d:DesignHeight="620"
+             x:Class="RestaurantDataNaseGUI.Views.CartView"
+             x:Name="Root"
+             x:DataType="vm:CartViewModel">
+
+    <Design.DataContext>
+        <!-- Doar pentru previzualizare in IDE. -->
+        <vm:CartViewModel/>
+    </Design.DataContext>
+
+    <Grid RowDefinitions="Auto,*,Auto">
+        <TextBlock Grid.Row="0" Text="Cosul tau" FontSize="22" FontWeight="Bold" Margin="16,12"/>
+
+        <ScrollViewer Grid.Row="1">
+            <StackPanel Margin="16,0">
+                <TextBlock Text="Cosul este gol." Opacity="0.7" IsVisible="{Binding CosGol}"/>
+
+                <ItemsControl ItemsSource="{Binding Articole}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="dtos:ArticolCosDto">
+                            <Border Padding="10" Margin="0,4" BorderBrush="#33808080" BorderThickness="1" CornerRadius="6">
+                                <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto,Auto" VerticalAlignment="Center">
+                                    <TextBlock Grid.Column="0" Text="{Binding Denumire}" VerticalAlignment="Center" TextWrapping="Wrap"/>
+
+                                    <Button Grid.Column="1" Content="-" Margin="4,0"
+                                            Command="{Binding DataContext.ModificaCantitateCommand, ElementName=Root}"
+                                            CommandParameter="{Binding Converter={x:Static convLocal:ArticolSiDeltaCantitateConverter.Instance}, ConverterParameter=-1}"/>
+
+                                    <TextBlock Grid.Column="2" Text="{Binding Cantitate, StringFormat='{}{0:0.##}'}"
+                                               VerticalAlignment="Center" MinWidth="24" TextAlignment="Center"/>
+
+                                    <Button Grid.Column="3" Content="+" Margin="4,0"
+                                            Command="{Binding DataContext.ModificaCantitateCommand, ElementName=Root}"
+                                            CommandParameter="{Binding Converter={x:Static convLocal:ArticolSiDeltaCantitateConverter.Instance}, ConverterParameter=1}"/>
+
+                                    <TextBlock Grid.Column="4" Text="{Binding Subtotal, StringFormat='{}{0:0.00} lei'}"
+                                               VerticalAlignment="Center" Margin="8,0" MinWidth="70"/>
+
+                                    <Button Grid.Column="5" Content="Sterge"
+                                            Command="{Binding DataContext.StergeArticolCommand, ElementName=Root}"
+                                            CommandParameter="{Binding}"/>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </ScrollViewer>
+
+        <Border Grid.Row="2" Padding="16" BorderBrush="#33808080" BorderThickness="0,1,0,0">
+            <StackPanel Spacing="6">
+                <StackPanel IsVisible="{Binding CalculCurent, Converter={x:Static conv:ObjectConverters.IsNotNull}}" Spacing="4">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Grid.Column="0" Text="Subtotal"/>
+                        <TextBlock Grid.Column="1" Text="{Binding CalculCurent.SubtotalMancare, StringFormat='{}{0:0.00} lei'}"/>
+                    </Grid>
+                    <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding CalculCurent.AreDiscount}">
+                        <TextBlock Grid.Column="0" Text="{Binding CalculCurent.MotivDiscount, StringFormat='Discount ({0})'}"/>
+                        <TextBlock Grid.Column="1" Text="{Binding CalculCurent.ValoareDiscount, StringFormat='-{0:0.00} lei'}" Foreground="Green"/>
+                    </Grid>
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Grid.Column="0" Text="Transport"/>
+                        <TextBlock Grid.Column="1" Text="{Binding CalculCurent.CostTransport, StringFormat='{}{0:0.00} lei'}"/>
+                    </Grid>
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Grid.Column="0" Text="Total" FontWeight="Bold"/>
+                        <TextBlock Grid.Column="1" Text="{Binding CalculCurent.Total, StringFormat='{}{0:0.00} lei'}" FontWeight="Bold"/>
+                    </Grid>
+                </StackPanel>
+
+                <TextBlock Text="{Binding MesajEroare}" Foreground="Red" TextWrapping="Wrap"
+                           IsVisible="{Binding MesajEroare, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}"/>
+
+                <TextBlock Text="{Binding MesajSucces}" Foreground="Green" TextWrapping="Wrap"
+                           IsVisible="{Binding MesajSucces, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}"/>
+
+                <TextBlock Text="Se trimite comanda..." IsVisible="{Binding EsteInCurs}" Opacity="0.7"/>
+
+                <Button Content="Trimite comanda"
+                        Command="{Binding TrimiteComandaCommand}"
+                        HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Center"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

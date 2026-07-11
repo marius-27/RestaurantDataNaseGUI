@@ -1,0 +1,79 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:RestaurantDataNaseGUI.ViewModels"
+             xmlns:dtos="using:RestaurantDataNaseGUI.Models.DTOs"
+             xmlns:conv="using:Avalonia.Data.Converters"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="700" d:DesignHeight="700"
+             x:Class="RestaurantDataNaseGUI.Views.MyOrdersView"
+             x:Name="Root"
+             x:DataType="vm:MyOrdersViewModel">
+
+    <Design.DataContext>
+        <!-- Doar pentru previzualizare in IDE. -->
+        <vm:MyOrdersViewModel/>
+    </Design.DataContext>
+
+    <Grid RowDefinitions="Auto,*">
+        <StackPanel Grid.Row="0" Margin="16,12" Spacing="8">
+            <StackPanel Orientation="Horizontal" Spacing="12">
+                <TextBlock Text="Comenzile mele" FontSize="22" FontWeight="Bold" VerticalAlignment="Center"/>
+                <TextBlock Text="Se incarca..." IsVisible="{Binding EsteInCurs}" VerticalAlignment="Center" Opacity="0.7"/>
+                <TextBlock Text="{Binding MesajEroare}"
+                           Foreground="Red"
+                           VerticalAlignment="Center"
+                           IsVisible="{Binding MesajEroare, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}"/>
+            </StackPanel>
+
+            <CheckBox Content="Arata doar comenzile active (nelivrate, neanulate)" IsChecked="{Binding DoarActive, Mode=TwoWay}"/>
+        </StackPanel>
+
+        <ScrollViewer Grid.Row="1">
+            <ItemsControl ItemsSource="{Binding ComenziDeAfisat}" Margin="16,0,16,16">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="dtos:ComandaClientDto">
+                        <Border Padding="12" Margin="0,6" CornerRadius="6" BorderThickness="1" BorderBrush="#33808080">
+                            <StackPanel Spacing="6">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10">
+                                        <TextBlock Text="{Binding CodUnic}" FontWeight="Bold"/>
+                                        <TextBlock Text="{Binding DataComanda, StringFormat='{}{0:dd.MM.yyyy HH:mm}'}" Opacity="0.7"/>
+                                    </StackPanel>
+
+                                    <Border Grid.Column="1" CornerRadius="4" Padding="8,2" Background="#4CAF50" IsVisible="{Binding EsteActiva}">
+                                        <TextBlock Text="{Binding Stare}" Foreground="White" FontSize="11"/>
+                                    </Border>
+                                    <Border Grid.Column="1" CornerRadius="4" Padding="8,2" Background="#9E9E9E" IsVisible="{Binding !EsteActiva}">
+                                        <TextBlock Text="{Binding Stare}" Foreground="White" FontSize="11"/>
+                                    </Border>
+                                </Grid>
+
+                                <ItemsControl ItemsSource="{Binding Articole}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="dtos:ArticolComandaClientDto">
+                                            <TextBlock Text="{Binding TextAfisare}" FontSize="12"/>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+
+                                <TextBlock Text="{Binding Total, StringFormat='Total: {0:0.00} lei'}" FontWeight="SemiBold"/>
+                                <TextBlock Text="{Binding CostTransport, StringFormat='Transport: {0:0.00} lei'}" FontSize="12" Opacity="0.8"/>
+                                <TextBlock Text="{Binding Discount, StringFormat='Discount: {0:0.##}%'}" FontSize="12" Opacity="0.8"
+                                           IsVisible="{Binding AreDiscount}"/>
+                                <TextBlock Text="{Binding OraEstimataLivrare, StringFormat='Ora estimata livrare: {0:dd.MM.yyyy HH:mm}'}"
+                                           FontSize="12" Opacity="0.8"
+                                           IsVisible="{Binding OraEstimataLivrare, Converter={x:Static conv:ObjectConverters.IsNotNull}}"/>
+
+                                <Button Content="Anuleaza comanda"
+                                        IsVisible="{Binding EsteActiva}"
+                                        Command="{Binding DataContext.AnuleazaComandaCommand, ElementName=Root}"
+                                        CommandParameter="{Binding ComandaId}"/>
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

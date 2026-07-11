@@ -1,0 +1,51 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:RestaurantDataNaseGUI.ViewModels"
+             xmlns:conv="using:Avalonia.Data.Converters"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="420"
+             x:Class="RestaurantDataNaseGUI.Views.LoginView"
+             x:DataType="vm:LoginViewModel">
+
+    <Design.DataContext>
+        <!-- Doar pentru previzualizare in IDE. -->
+        <vm:LoginViewModel/>
+    </Design.DataContext>
+
+    <Border Padding="32" MaxWidth="360" HorizontalAlignment="Center" VerticalAlignment="Center">
+        <StackPanel Spacing="12">
+            <TextBlock Text="Autentificare" FontSize="22" FontWeight="Bold" HorizontalAlignment="Center"/>
+
+            <StackPanel Spacing="4">
+                <TextBlock Text="Email"/>
+                <TextBox Text="{Binding Email, Mode=TwoWay}" PlaceholderText="nume@exemplu.ro"/>
+            </StackPanel>
+
+            <StackPanel Spacing="4">
+                <TextBlock Text="Parola"/>
+                <TextBox Text="{Binding Parola, Mode=TwoWay}" PasswordChar="•"/>
+            </StackPanel>
+
+            <TextBlock Text="{Binding MesajEroare}"
+                       Foreground="Red"
+                       TextWrapping="Wrap"
+                       IsVisible="{Binding MesajEroare, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}"/>
+
+            <TextBlock Text="Se autentifica..."
+                       IsVisible="{Binding EsteInCurs}"
+                       HorizontalAlignment="Center"
+                       Opacity="0.7"/>
+
+            <Button Content="Autentificare"
+                    Command="{Binding LoginCommand}"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Center"/>
+
+            <Button Content="Nu ai cont? Inregistreaza-te"
+                    Command="{Binding NavigheazaLaInregistrareCommand}"
+                    HorizontalAlignment="Center"
+                    Background="Transparent"/>
+        </StackPanel>
+    </Border>
+</UserControl>

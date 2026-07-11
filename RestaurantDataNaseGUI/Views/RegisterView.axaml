@@ -1,0 +1,78 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:RestaurantDataNaseGUI.ViewModels"
+             xmlns:conv="using:Avalonia.Data.Converters"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="420" d:DesignHeight="680"
+             x:Class="RestaurantDataNaseGUI.Views.RegisterView"
+             x:DataType="vm:RegisterViewModel">
+
+    <Design.DataContext>
+        <!-- Doar pentru previzualizare in IDE. -->
+        <vm:RegisterViewModel/>
+    </Design.DataContext>
+
+    <ScrollViewer>
+        <Border Padding="32" MaxWidth="380" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <StackPanel Spacing="10">
+                <TextBlock Text="Cont nou" FontSize="22" FontWeight="Bold" HorizontalAlignment="Center"/>
+
+                <StackPanel Spacing="4">
+                    <TextBlock Text="Nume"/>
+                    <TextBox Text="{Binding Nume, Mode=TwoWay}"/>
+                </StackPanel>
+
+                <StackPanel Spacing="4">
+                    <TextBlock Text="Prenume"/>
+                    <TextBox Text="{Binding Prenume, Mode=TwoWay}"/>
+                </StackPanel>
+
+                <StackPanel Spacing="4">
+                    <TextBlock Text="Email"/>
+                    <TextBox Text="{Binding Email, Mode=TwoWay}" PlaceholderText="nume@exemplu.ro"/>
+                </StackPanel>
+
+                <StackPanel Spacing="4">
+                    <TextBlock Text="Telefon"/>
+                    <TextBox Text="{Binding Telefon, Mode=TwoWay}" PlaceholderText="07xxxxxxxx"/>
+                </StackPanel>
+
+                <StackPanel Spacing="4">
+                    <TextBlock Text="Adresa de livrare (optional)"/>
+                    <TextBox Text="{Binding AdresaLivrare, Mode=TwoWay}"/>
+                </StackPanel>
+
+                <StackPanel Spacing="4">
+                    <TextBlock Text="Parola"/>
+                    <TextBox Text="{Binding Parola, Mode=TwoWay}" PasswordChar="•"/>
+                </StackPanel>
+
+                <StackPanel Spacing="4">
+                    <TextBlock Text="Confirma parola"/>
+                    <TextBox Text="{Binding ConfirmareParola, Mode=TwoWay}" PasswordChar="•"/>
+                </StackPanel>
+
+                <TextBlock Text="{Binding MesajEroare}"
+                           Foreground="Red"
+                           TextWrapping="Wrap"
+                           IsVisible="{Binding MesajEroare, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}"/>
+
+                <TextBlock Text="Se inregistreaza..."
+                           IsVisible="{Binding EsteInCurs}"
+                           HorizontalAlignment="Center"
+                           Opacity="0.7"/>
+
+                <Button Content="Creeaza cont"
+                        Command="{Binding RegisterCommand}"
+                        HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Center"/>
+
+                <Button Content="Ai deja cont? Autentifica-te"
+                        Command="{Binding NavigheazaLaLoginCommand}"
+                        HorizontalAlignment="Center"
+                        Background="Transparent"/>
+            </StackPanel>
+        </Border>
+    </ScrollViewer>
+</UserControl>
