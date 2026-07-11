@@ -2,3 +2,8 @@
 RestaurantDataNaseGUI/appsettings.Development.json
 docker/.env
 k8s/secret.local.yaml
+
+# Build artifacts .NET
+bin/
+obj/
+*.user
