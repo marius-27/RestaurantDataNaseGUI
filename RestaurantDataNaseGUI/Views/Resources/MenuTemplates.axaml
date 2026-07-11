@@ -10,9 +10,17 @@
         MenuView cat si in SearchView. x:CompileBindings="False" e necesar
         aici: fiecare View consumator are un DataContext de alt tip
         (MenuViewModel / SearchViewModel), asa ca legatura catre
-        ElementName=Root nu poate fi validata static la compilare pentru
-        ambele - foloseste bindare clasica (prin reflectie), rezolvata la
-        runtime prin NameScope-ul View-ului care instantiaza template-ul.
+        DataContext-ul UserControl-ului gazda nu poate fi validata static la
+        compilare pentru ambele - foloseste bindare clasica (prin reflectie).
+
+        Folosim $parent[UserControl].DataContext, NU ElementName=Root: acest
+        fisier e un ResourceDictionary separat, importat prin ResourceInclude,
+        iar in Avalonia ElementName se rezolva doar prin NameScope-ul propriu
+        fisierului XAML curent - nu traverseaza granita catre NameScope-ul
+        View-ului care il consuma (spre deosebire de $parent[T], care
+        parcurge arborele vizual live, independent de NameScope/fisier).
+        Vezi https://github.com/AvaloniaUI/Avalonia/issues/1572.
+
         Ambele ViewModel-uri expun o proprietate PoateComanda si o comanda
         AdaugaInCosCommand cu acelasi nume/semnatura, exact ca aceste
         binding-uri sa functioneze indiferent de View.
@@ -57,9 +65,9 @@
                            Foreground="Red" FontWeight="Bold" FontSize="12"/>
 
                 <Button Content="Comanda"
-                        Command="{Binding DataContext.AdaugaInCosCommand, ElementName=Root}"
+                        Command="{Binding $parent[UserControl].DataContext.AdaugaInCosCommand}"
                         CommandParameter="{Binding}"
-                        IsVisible="{Binding DataContext.PoateComanda, ElementName=Root}"
+                        IsVisible="{Binding $parent[UserControl].DataContext.PoateComanda}"
                         IsEnabled="{Binding !EsteIndisponibil}"
                         HorizontalAlignment="Stretch"
                         HorizontalContentAlignment="Center"/>

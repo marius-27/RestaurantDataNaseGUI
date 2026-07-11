@@ -158,8 +158,8 @@ CREATE TABLE dbo.Meniu
     CONSTRAINT PK_Meniu PRIMARY KEY CLUSTERED (Id),
     CONSTRAINT FK_Meniu_Categorie FOREIGN KEY (CategorieId) REFERENCES dbo.Categorie (Id)
     -- NOTA: NU exista o coloana "Pret" aici in mod intentionat.
-    -- Pretul se calculeaza dinamic din preparatele componente minus discountul
-    -- din Configurare -> vezi functia dbo.fn_CalculeazaPretMeniu.
+    -- Pretul se calculeaza dinamic ca suma preturilor preparatelor componente
+    -- minus discountul din Configurare -> vezi functia dbo.fn_CalculeazaPretMeniu.
 );
 GO
 
@@ -171,6 +171,10 @@ CREATE TABLE dbo.MeniuPreparat
 (
     MeniuId             INT             NOT NULL,
     PreparatId          INT             NOT NULL,
+    -- CantitateInMeniu = gramaj/portie a preparatului in cadrul meniului
+    -- (ex. 200g), NU un multiplicator de pret. Folosita la afisare si la
+    -- scaderea din stoc (sp_UpdateCantitateTotalaLaComanda); NU intra in
+    -- calculul pretului meniului (fn_CalculeazaPretMeniu).
     CantitateInMeniu    DECIMAL(10,2)   NOT NULL,
     CONSTRAINT PK_MeniuPreparat PRIMARY KEY CLUSTERED (MeniuId, PreparatId),
     CONSTRAINT FK_MeniuPreparat_Meniu    FOREIGN KEY (MeniuId)    REFERENCES dbo.Meniu (Id)    ON DELETE CASCADE,
@@ -282,6 +286,14 @@ GO
 
 /* ============================================================================
    8. Functie: calcul dinamic pret Meniu
+
+   IMPORTANT: MeniuPreparat.CantitateInMeniu este gramajul/portia preparatului
+   in cadrul meniului (ex. 200g cartofi prajiti), NU un multiplicator de
+   pret - un meniu nu costa "de 200 de ori" pretul unei portii de preparat.
+   CantitateInMeniu se foloseste corect ca gramaj la afisare si in
+   sp_UpdateCantitateTotalaLaComanda (scaderea din stoc). Pretul unui meniu
+   este suma preturilor preparatelor componente (o data per preparat),
+   minus discountul din Configurare.
    ============================================================================ */
 
 CREATE FUNCTION dbo.fn_CalculeazaPretMeniu (@MeniuId INT)
@@ -291,7 +303,9 @@ BEGIN
     DECLARE @PretBrut DECIMAL(10,2);
     DECLARE @DiscountProcent DECIMAL(5,2);
 
-    SELECT @PretBrut = SUM(p.Pret * mp.CantitateInMeniu)
+    -- Suma preturilor preparatelor componente, o singura data per preparat -
+    -- CantitateInMeniu NU se foloseste aici (este gramaj, nu multiplicator).
+    SELECT @PretBrut = SUM(p.Pret)
     FROM dbo.MeniuPreparat mp
     INNER JOIN dbo.Preparat p ON p.Id = mp.PreparatId
     WHERE mp.MeniuId = @MeniuId;

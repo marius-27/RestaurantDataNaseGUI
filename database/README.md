@@ -89,8 +89,8 @@ Un preparat poate avea mai multe imagini (relație 1:N). Fiecare rând conține
 ### Meniu
 Un meniu compus din mai multe preparate, aparținând unei `Categorie`.
 **Nu are coloană de preț.** Prețul se calculează dinamic din suma
-`Preparat.Pret * CantitateInMeniu` pentru toate preparatele componente,
-minus discountul din `Configurare` — vezi funcția
+`Preparat.Pret` pentru toate preparatele componente (o singură dată per
+preparat), minus discountul din `Configurare` — vezi funcția
 `dbo.fn_CalculeazaPretMeniu`. Motivul: dacă prețul ar fi stocat direct,
 ar deveni o dependență derivată/redundantă față de prețurile preparatelor
 și discount, care s-ar putea decala în timp (încălcare a principiului
@@ -98,8 +98,11 @@ ar deveni o dependență derivată/redundantă față de prețurile preparatelor
 
 ### MeniuPreparat
 Tabel de legătură many-to-many `Meniu` ↔ `Preparat`, cu atributul propriu
-`CantitateInMeniu` (cât se folosește din preparatul respectiv în acel
-meniu). Cheie primară compusă `(MeniuId, PreparatId)`.
+`CantitateInMeniu` — gramajul/porția preparatului respectiv în acel meniu
+(ex. 200g cartofi prăjiți), folosit la afișare și la scăderea din stoc
+(`sp_UpdateCantitateTotalaLaComanda`). **Nu** este un multiplicator de preț:
+`fn_CalculeazaPretMeniu` NU îl folosește în calculul prețului. Cheie primară
+compusă `(MeniuId, PreparatId)`.
 
 ### Utilizator
 Clienți și angajați, diferențiați prin `TipUtilizator` (`Client` sau
@@ -168,10 +171,12 @@ business logic, fără a introduce o coloană redundantă în schemă.
 ## Funcție și proceduri stocate
 
 ### `dbo.fn_CalculeazaPretMeniu(@MeniuId INT) RETURNS DECIMAL(10,2)`
-Calculează prețul unui meniu: suma `Pret * CantitateInMeniu` pentru toate
-preparatele componente, minus procentul din `Configurare` (cheia
-`DiscountMeniuProcent`). Este sursa unică a prețului unui meniu — folosită
-atât de proceduri, cât și disponibilă pentru interogări ad-hoc.
+Calculează prețul unui meniu: suma `Preparat.Pret` pentru toate preparatele
+componente (o singură dată per preparat, **fără** `CantitateInMeniu` — acea
+coloană e gramaj/porție, nu multiplicator de preț), minus procentul din
+`Configurare` (cheia `DiscountMeniuProcent`). Este sursa unică a prețului
+unui meniu — folosită atât de proceduri, cât și disponibilă pentru
+interogări ad-hoc.
 
 ### 1. `sp_CreateComanda`
 ```

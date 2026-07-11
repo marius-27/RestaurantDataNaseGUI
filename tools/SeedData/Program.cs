@@ -298,7 +298,7 @@ static string GetImaginiDirectory()
     }
 
     throw new InvalidOperationException(
-        "Nu s-a gasit folderul cu poze demo (tools/SeedData/Images). Ruleaza 'dotnet run' din folderul tools/SeedData.");
+        "Nu s-a gasit folderul cu poze (tools/SeedData/Images). Ruleaza 'dotnet run' din folderul tools/SeedData.");
 }
 
 // ----------------------------------------------------------------------

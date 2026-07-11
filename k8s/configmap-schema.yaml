@@ -27,7 +27,7 @@ data:
        ci se calculeaza dinamic (vezi functia dbo.fn_CalculeazaPretMeniu),
        pentru a evita date derivate/redundante care ar putea deveni inconsistente.
        ============================================================================ */
-    
+
     /* ----------------------------------------------------------------------
        0. (Optional) Creare baza de date
        ---------------------------------------------------------------------- */
@@ -36,10 +36,10 @@ data:
         CREATE DATABASE RestaurantDataNase;
     END
     GO
-    
+
     USE RestaurantDataNase;
     GO
-    
+
     /* ----------------------------------------------------------------------
        1. Curatare (drop in ordine inversa dependentelor) - pentru rulari repetate
        ---------------------------------------------------------------------- */
@@ -51,7 +51,7 @@ data:
     IF OBJECT_ID(N'dbo.sp_AdaugaDetaliuComanda', N'P') IS NOT NULL DROP PROCEDURE dbo.sp_AdaugaDetaliuComanda;
     IF OBJECT_ID(N'dbo.sp_CreateComanda', N'P') IS NOT NULL DROP PROCEDURE dbo.sp_CreateComanda;
     IF OBJECT_ID(N'dbo.fn_CalculeazaPretMeniu', N'FN') IS NOT NULL DROP FUNCTION dbo.fn_CalculeazaPretMeniu;
-    
+
     IF OBJECT_ID(N'dbo.ComandaDetaliu', N'U') IS NOT NULL DROP TABLE dbo.ComandaDetaliu;
     IF OBJECT_ID(N'dbo.Comanda', N'U') IS NOT NULL DROP TABLE dbo.Comanda;
     IF OBJECT_ID(N'dbo.StareComanda', N'U') IS NOT NULL DROP TABLE dbo.StareComanda;
@@ -65,11 +65,11 @@ data:
     IF OBJECT_ID(N'dbo.Categorie', N'U') IS NOT NULL DROP TABLE dbo.Categorie;
     IF OBJECT_ID(N'dbo.Configurare', N'U') IS NOT NULL DROP TABLE dbo.Configurare;
     GO
-    
+
     /* ----------------------------------------------------------------------
        2. Tabele de baza / lookup
        ---------------------------------------------------------------------- */
-    
+
     CREATE TABLE dbo.Categorie
     (
         Id          INT IDENTITY(1,1)  NOT NULL,
@@ -78,7 +78,7 @@ data:
         CONSTRAINT UQ_Categorie_Denumire UNIQUE (Denumire)
     );
     GO
-    
+
     CREATE TABLE dbo.Alergen
     (
         Id          INT IDENTITY(1,1)  NOT NULL,
@@ -87,7 +87,7 @@ data:
         CONSTRAINT UQ_Alergen_Denumire UNIQUE (Denumire)
     );
     GO
-    
+
     -- Configuratii generale ale aplicatiei (ex. procent discount la meniuri),
     -- folosite pentru a nu "hardcoda" valori in proceduri.
     CREATE TABLE dbo.Configurare
@@ -100,7 +100,7 @@ data:
         CONSTRAINT UQ_Configurare_Cheie UNIQUE (Cheie)
     );
     GO
-    
+
     -- Lookup pentru starile posibile ale unei comenzi (evita un varchar liber
     -- pe Comanda si permite extinderea usoara a starilor).
     CREATE TABLE dbo.StareComanda
@@ -111,11 +111,11 @@ data:
         CONSTRAINT UQ_StareComanda_Denumire UNIQUE (Denumire)
     );
     GO
-    
+
     /* ----------------------------------------------------------------------
        3. Preparat si tabelele asociate (imagini, alergeni)
        ---------------------------------------------------------------------- */
-    
+
     CREATE TABLE dbo.Preparat
     (
         Id                          INT IDENTITY(1,1)  NOT NULL,
@@ -133,10 +133,10 @@ data:
         CONSTRAINT CK_Preparat_CantitateTotalaRestaurant CHECK (CantitateTotalaRestaurant >= 0)
     );
     GO
-    
+
     CREATE INDEX IX_Preparat_CategorieId ON dbo.Preparat (CategorieId);
     GO
-    
+
     -- Relatie many-to-many Preparat <-> Alergen
     CREATE TABLE dbo.PreparatAlergen
     (
@@ -147,10 +147,10 @@ data:
         CONSTRAINT FK_PreparatAlergen_Alergen  FOREIGN KEY (AlergenId)  REFERENCES dbo.Alergen (Id)  ON DELETE CASCADE
     );
     GO
-    
+
     CREATE INDEX IX_PreparatAlergen_AlergenId ON dbo.PreparatAlergen (AlergenId);
     GO
-    
+
     -- Un preparat poate avea mai multe imagini (1 - N)
     CREATE TABLE dbo.PreparatImagine
     (
@@ -161,14 +161,14 @@ data:
         CONSTRAINT FK_PreparatImagine_Preparat FOREIGN KEY (PreparatId) REFERENCES dbo.Preparat (Id) ON DELETE CASCADE
     );
     GO
-    
+
     CREATE INDEX IX_PreparatImagine_PreparatId ON dbo.PreparatImagine (PreparatId);
     GO
-    
+
     /* ----------------------------------------------------------------------
        4. Meniu (compus din preparate, pret calculat dinamic)
        ---------------------------------------------------------------------- */
-    
+
     CREATE TABLE dbo.Meniu
     (
         Id              INT IDENTITY(1,1)  NOT NULL,
@@ -177,19 +177,23 @@ data:
         CONSTRAINT PK_Meniu PRIMARY KEY CLUSTERED (Id),
         CONSTRAINT FK_Meniu_Categorie FOREIGN KEY (CategorieId) REFERENCES dbo.Categorie (Id)
         -- NOTA: NU exista o coloana "Pret" aici in mod intentionat.
-        -- Pretul se calculeaza dinamic din preparatele componente minus discountul
-        -- din Configurare -> vezi functia dbo.fn_CalculeazaPretMeniu.
+        -- Pretul se calculeaza dinamic ca suma preturilor preparatelor componente
+        -- minus discountul din Configurare -> vezi functia dbo.fn_CalculeazaPretMeniu.
     );
     GO
-    
+
     CREATE INDEX IX_Meniu_CategorieId ON dbo.Meniu (CategorieId);
     GO
-    
+
     -- Relatie many-to-many Meniu <-> Preparat, cu cantitate specifica per meniu
     CREATE TABLE dbo.MeniuPreparat
     (
         MeniuId             INT             NOT NULL,
         PreparatId          INT             NOT NULL,
+        -- CantitateInMeniu = gramaj/portie a preparatului in cadrul meniului
+        -- (ex. 200g), NU un multiplicator de pret. Folosita la afisare si la
+        -- scaderea din stoc (sp_UpdateCantitateTotalaLaComanda); NU intra in
+        -- calculul pretului meniului (fn_CalculeazaPretMeniu).
         CantitateInMeniu    DECIMAL(10,2)   NOT NULL,
         CONSTRAINT PK_MeniuPreparat PRIMARY KEY CLUSTERED (MeniuId, PreparatId),
         CONSTRAINT FK_MeniuPreparat_Meniu    FOREIGN KEY (MeniuId)    REFERENCES dbo.Meniu (Id)    ON DELETE CASCADE,
@@ -197,14 +201,14 @@ data:
         CONSTRAINT CK_MeniuPreparat_Cantitate CHECK (CantitateInMeniu > 0)
     );
     GO
-    
+
     CREATE INDEX IX_MeniuPreparat_PreparatId ON dbo.MeniuPreparat (PreparatId);
     GO
-    
+
     /* ----------------------------------------------------------------------
        5. Utilizator
        ---------------------------------------------------------------------- */
-    
+
     CREATE TABLE dbo.Utilizator
     (
         Id              INT IDENTITY(1,1)  NOT NULL,
@@ -221,11 +225,11 @@ data:
         CONSTRAINT CK_Utilizator_Email CHECK (Email LIKE '%_@__%.__%')
     );
     GO
-    
+
     /* ----------------------------------------------------------------------
        6. Comanda si ComandaDetaliu
        ---------------------------------------------------------------------- */
-    
+
     CREATE TABLE dbo.Comanda
     (
         Id                      INT IDENTITY(1,1)  NOT NULL,
@@ -244,11 +248,11 @@ data:
         CONSTRAINT CK_Comanda_Discount CHECK (Discount >= 0 AND Discount <= 100)
     );
     GO
-    
+
     CREATE INDEX IX_Comanda_UtilizatorId ON dbo.Comanda (UtilizatorId);
     CREATE INDEX IX_Comanda_StareId ON dbo.Comanda (StareId);
     GO
-    
+
     -- O linie de comanda se refera fie la un Preparat, fie la un Meniu (niciodata ambele/niciunul)
     CREATE TABLE dbo.ComandaDetaliu
     (
@@ -270,16 +274,16 @@ data:
         )
     );
     GO
-    
+
     CREATE INDEX IX_ComandaDetaliu_ComandaId  ON dbo.ComandaDetaliu (ComandaId);
     CREATE INDEX IX_ComandaDetaliu_PreparatId ON dbo.ComandaDetaliu (PreparatId);
     CREATE INDEX IX_ComandaDetaliu_MeniuId    ON dbo.ComandaDetaliu (MeniuId);
     GO
-    
+
     /* ----------------------------------------------------------------------
        7. Date seed minime (lookup-uri si configurare)
        ---------------------------------------------------------------------- */
-    
+
     INSERT INTO dbo.StareComanda (Denumire) VALUES
         (N'inregistrata'),
         (N'se pregateste'),
@@ -287,7 +291,7 @@ data:
         (N'livrata'),
         (N'anulata');
     GO
-    
+
     INSERT INTO dbo.Configurare (Cheie, Valoare, Descriere) VALUES
         (N'DiscountMeniuProcent',        N'10',  N'Procent de discount aplicat la suma preparatelor componente pentru a obtine pretul unui Meniu'),
         (N'SumaMinimaComandaDiscount',   N'100', N'Suma minima a unei comenzi (in lei) peste care se aplica discountul de frecventa'),
@@ -298,38 +302,48 @@ data:
         (N'CostTransport',               N'15',  N'Costul standard al transportului (in lei), aplicat sub PragTransportGratuit'),
         (N'PragStocEpuizare',            N'10',  N'Prag implicit de cantitate in stoc sub care un preparat este considerat aproape de epuizare');
     GO
-    
+
     /* ============================================================================
        8. Functie: calcul dinamic pret Meniu
+
+       IMPORTANT: MeniuPreparat.CantitateInMeniu este gramajul/portia preparatului
+       in cadrul meniului (ex. 200g cartofi prajiti), NU un multiplicator de
+       pret - un meniu nu costa "de 200 de ori" pretul unei portii de preparat.
+       CantitateInMeniu se foloseste corect ca gramaj la afisare si in
+       sp_UpdateCantitateTotalaLaComanda (scaderea din stoc). Pretul unui meniu
+       este suma preturilor preparatelor componente (o data per preparat),
+       minus discountul din Configurare.
        ============================================================================ */
-    
+
     CREATE FUNCTION dbo.fn_CalculeazaPretMeniu (@MeniuId INT)
     RETURNS DECIMAL(10,2)
     AS
     BEGIN
         DECLARE @PretBrut DECIMAL(10,2);
         DECLARE @DiscountProcent DECIMAL(5,2);
-    
-        SELECT @PretBrut = SUM(p.Pret * mp.CantitateInMeniu)
+
+        -- Suma preturilor preparatelor componente, o singura data per preparat -
+        -- CantitateInMeniu NU se foloseste aici (este gramaj, nu multiplicator).
+        SELECT @PretBrut = SUM(p.Pret)
         FROM dbo.MeniuPreparat mp
         INNER JOIN dbo.Preparat p ON p.Id = mp.PreparatId
         WHERE mp.MeniuId = @MeniuId;
-    
+
         SELECT @DiscountProcent = TRY_CAST(Valoare AS DECIMAL(5,2))
         FROM dbo.Configurare
         WHERE Cheie = N'DiscountMeniuProcent';
-    
+
         IF @PretBrut IS NULL SET @PretBrut = 0;
         IF @DiscountProcent IS NULL SET @DiscountProcent = 0;
-    
+
         RETURN ROUND(@PretBrut * (1 - @DiscountProcent / 100.0), 2);
     END
     GO
-    
+
     /* ============================================================================
        9. Proceduri stocate
        ============================================================================ */
-    
+
     /* -----------------------------------------------------------------------
        sp_CreateComanda
        Creeaza antetul unei comenzi noi (starea initiala = 'inregistrata') si
@@ -345,28 +359,28 @@ data:
     AS
     BEGIN
         SET NOCOUNT ON;
-    
+
         IF NOT EXISTS (SELECT 1 FROM dbo.Utilizator WHERE Id = @UtilizatorId)
         BEGIN
             RAISERROR(N'Utilizatorul specificat nu exista.', 16, 1);
             RETURN;
         END
-    
+
         DECLARE @StareInregistrataId INT =
             (SELECT Id FROM dbo.StareComanda WHERE Denumire = N'inregistrata');
-    
+
         DECLARE @Cod VARCHAR(20) =
             CONCAT('CMD-', FORMAT(SYSUTCDATETIME(), 'yyyyMMddHHmmss'),
                    RIGHT('000' + CAST(ABS(CHECKSUM(NEWID())) % 1000 AS VARCHAR(3)), 3));
-    
+
         INSERT INTO dbo.Comanda (CodUnic, UtilizatorId, DataComanda, StareId, CostTransport, Discount, OraEstimataLivrare)
         VALUES (@Cod, @UtilizatorId, SYSUTCDATETIME(), @StareInregistrataId, @CostTransport, @Discount, NULL);
-    
+
         SET @ComandaId = SCOPE_IDENTITY();
         SET @CodUnic = @Cod;
     END
     GO
-    
+
     /* -----------------------------------------------------------------------
        sp_AdaugaDetaliuComanda
        Adauga o linie intr-o comanda existenta - fie pentru un Preparat, fie
@@ -383,21 +397,21 @@ data:
     AS
     BEGIN
         SET NOCOUNT ON;
-    
+
         IF (@PreparatId IS NULL AND @MeniuId IS NULL) OR (@PreparatId IS NOT NULL AND @MeniuId IS NOT NULL)
         BEGIN
             RAISERROR(N'Trebuie specificat exact unul dintre @PreparatId sau @MeniuId.', 16, 1);
             RETURN;
         END
-    
+
         IF NOT EXISTS (SELECT 1 FROM dbo.Comanda WHERE Id = @ComandaId)
         BEGIN
             RAISERROR(N'Comanda specificata nu exista.', 16, 1);
             RETURN;
         END
-    
+
         DECLARE @PretUnitar DECIMAL(10,2);
-    
+
         IF @PreparatId IS NOT NULL
         BEGIN
             SELECT @PretUnitar = Pret
@@ -411,18 +425,18 @@ data:
             ELSE
                 SET @PretUnitar = dbo.fn_CalculeazaPretMeniu(@MeniuId);
         END
-    
+
         IF @PretUnitar IS NULL
         BEGIN
             RAISERROR(N'Preparatul/Meniul specificat nu exista sau nu este disponibil.', 16, 1);
             RETURN;
         END
-    
+
         INSERT INTO dbo.ComandaDetaliu (ComandaId, PreparatId, MeniuId, Cantitate, PretUnitarLaComanda)
         VALUES (@ComandaId, @PreparatId, @MeniuId, @Cantitate, @PretUnitar);
     END
     GO
-    
+
     /* -----------------------------------------------------------------------
        sp_UpdateCantitateTotalaLaComanda   [interogare complexa: CTE + UNION + JOIN]
        Scade din stocul preparatelor (Preparat.CantitateTotalaRestaurant)
@@ -435,22 +449,22 @@ data:
     AS
     BEGIN
         SET NOCOUNT ON;
-    
+
         IF NOT EXISTS (SELECT 1 FROM dbo.Comanda WHERE Id = @ComandaId)
         BEGIN
             RAISERROR(N'Comanda specificata nu exista.', 16, 1);
             RETURN;
         END
-    
+
         BEGIN TRANSACTION;
         BEGIN TRY
             ;WITH ConsumPreparate AS (
                 SELECT cd.PreparatId AS PreparatId, cd.Cantitate AS CantitateConsumata
                 FROM dbo.ComandaDetaliu cd
                 WHERE cd.ComandaId = @ComandaId AND cd.PreparatId IS NOT NULL
-    
+
                 UNION ALL
-    
+
                 SELECT mp.PreparatId, mp.CantitateInMeniu * cd.Cantitate
                 FROM dbo.ComandaDetaliu cd
                 INNER JOIN dbo.MeniuPreparat mp ON mp.MeniuId = cd.MeniuId
@@ -465,14 +479,14 @@ data:
             SET p.CantitateTotalaRestaurant = p.CantitateTotalaRestaurant - ct.CantitateTotala
             FROM dbo.Preparat p
             INNER JOIN ConsumTotal ct ON ct.PreparatId = p.Id;
-    
+
             IF EXISTS (SELECT 1 FROM dbo.Preparat WHERE CantitateTotalaRestaurant < 0)
             BEGIN
                 ROLLBACK TRANSACTION;
                 RAISERROR(N'Stoc insuficient pentru unul dintre preparatele din comanda.', 16, 1);
                 RETURN;
             END
-    
+
             COMMIT TRANSACTION;
         END TRY
         BEGIN CATCH
@@ -482,7 +496,7 @@ data:
         END CATCH
     END
     GO
-    
+
     /* -----------------------------------------------------------------------
        sp_GetComenziClientCuDetalii   [interogare complexa: JOIN multiplu + LEFT JOIN]
        Returneaza toate comenzile unui client, cu toate liniile de detaliu
@@ -493,7 +507,7 @@ data:
     AS
     BEGIN
         SET NOCOUNT ON;
-    
+
         SELECT
             c.Id                    AS ComandaId,
             c.CodUnic,
@@ -517,7 +531,7 @@ data:
         ORDER BY c.DataComanda DESC, cd.Id;
     END
     GO
-    
+
     /* -----------------------------------------------------------------------
        sp_GetPreparateApropiateDeEpuizare
        Lista preparatelor al caror stoc a scazut sub un prag dat. Daca
@@ -530,17 +544,17 @@ data:
     AS
     BEGIN
         SET NOCOUNT ON;
-    
+
         IF @PragCantitate IS NULL
         BEGIN
             SELECT @PragCantitate = TRY_CAST(Valoare AS DECIMAL(10,2))
             FROM dbo.Configurare
             WHERE Cheie = N'PragStocEpuizare';
         END
-    
+
         IF @PragCantitate IS NULL
             SET @PragCantitate = 10;
-    
+
         SELECT
             p.Id,
             p.Denumire,
@@ -554,7 +568,7 @@ data:
         ORDER BY p.CantitateTotalaRestaurant ASC;
     END
     GO
-    
+
     /* -----------------------------------------------------------------------
        sp_GetMeniuRestaurantCuAlergeni   [interogare complexa: JOIN multiplu + agregare]
        Returneaza toate meniurile, pretul lor calculat dinamic si lista de
@@ -564,7 +578,7 @@ data:
     AS
     BEGIN
         SET NOCOUNT ON;
-    
+
         SELECT
             m.Id                                AS MeniuId,
             m.Denumire                          AS Meniu,
@@ -580,7 +594,7 @@ data:
         ORDER BY m.Denumire;
     END
     GO
-    
+
     /* -----------------------------------------------------------------------
        sp_SetPreparatIndisponibil
        Marcheaza un preparat ca indisponibil (soft-delete). Preparatele NU se
@@ -594,13 +608,13 @@ data:
     AS
     BEGIN
         SET NOCOUNT ON;
-    
+
         IF NOT EXISTS (SELECT 1 FROM dbo.Preparat WHERE Id = @PreparatId)
         BEGIN
             RAISERROR(N'Preparatul specificat nu exista.', 16, 1);
             RETURN;
         END
-    
+
         UPDATE dbo.Preparat
         SET Disponibil = 0
         WHERE Id = @PreparatId;
