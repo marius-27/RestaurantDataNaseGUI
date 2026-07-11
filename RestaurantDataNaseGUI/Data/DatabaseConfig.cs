@@ -4,18 +4,13 @@ using Microsoft.Extensions.Configuration;
 
 namespace RestaurantDataNaseGUI.Data;
 
-/// <summary>
-/// Construieste configuratia si optiunile pentru RestaurantDbContext pe baza
-/// connection string-ului din appsettings.json - niciodata hardcodat in cod.
-/// </summary>
+// Configuratia si optiunile pentru RestaurantDbContext, din appsettings.json
+// - niciodata hardcodate in cod.
 public static class DatabaseConfig
 {
     private const string ConnectionStringName = "RestaurantDataNase";
 
-    /// <summary>
-    /// Incarca appsettings.json (si, daca exista, appsettings.Development.json)
-    /// din folderul aplicatiei.
-    /// </summary>
+    // Incarca appsettings.json si, daca exista, appsettings.Development.json.
     public static IConfiguration BuildConfiguration()
     {
         return new ConfigurationBuilder()
@@ -42,7 +37,7 @@ public static class DatabaseConfig
             .Options;
     }
 
-    /// <summary>Creeaza direct un RestaurantDbContext, fara a necesita un container DI.</summary>
+    // Creeaza direct un RestaurantDbContext, fara container DI.
     public static RestaurantDbContext CreateDbContext(IConfiguration? configuration = null)
     {
         return new RestaurantDbContext(CreateDbContextOptions(configuration));

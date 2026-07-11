@@ -1,6 +1,6 @@
 namespace RestaurantDataNaseGUI.ViewModels.Admin;
 
-/// <summary>Tipurile de raport disponibile in ReportsViewModel, cate unul per metoda din IReportService.</summary>
+// Tipurile de raport din ReportsViewModel, cate unul per metoda din IReportService.
 public enum TipRaport
 {
     Vanzari,
@@ -9,7 +9,7 @@ public enum TipRaport
     StocCurent,
 }
 
-/// <summary>O optiune din selectorul de tip raport (ComboBox) - perechea enum + denumire afisata.</summary>
+// Optiune din selectorul de tip raport (ComboBox): enum + denumire afisata.
 public class TipRaportOptiune
 {
     public TipRaport Tip { get; }

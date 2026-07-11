@@ -3,38 +3,35 @@ using System.Collections.Generic;
 
 namespace RestaurantDataNaseGUI.Models.DTOs.Reports;
 
-/// <summary>O zi din defalcarea pe zile a RaportVanzariDto.</summary>
+// O zi din defalcarea pe zile a RaportVanzariDto.
 public class VanzareZilnicaDto
 {
     public DateTime Data { get; set; }
 
-    /// <summary>Toate comenzile plasate in aceasta zi, indiferent de stare.</summary>
+    // Toate comenzile plasate in aceasta zi, indiferent de stare.
     public int NumarComenzi { get; set; }
 
-    /// <summary>Dintre NumarComenzi, cate au fost anulate.</summary>
+    // Dintre NumarComenzi, cate au fost anulate.
     public int NumarComenziAnulate { get; set; }
 
-    /// <summary>Suma incasata in aceasta zi (exclude comenzile anulate).</summary>
+    // Suma incasata in aceasta zi (exclude comenzile anulate).
     public decimal SumaIncasata { get; set; }
 }
 
-/// <summary>
-/// Rezultatul IReportService.RaportVanzariPerioadaAsync: numarul de comenzi,
-/// suma totala incasata (mancare + transport - discount, exclude comenzile
-/// anulate) si numarul de comenzi anulate, pentru un interval [DataStart,
-/// DataEnd], plus defalcarea pe zile.
-/// </summary>
+// Rezultatul IReportService.RaportVanzariPerioadaAsync pentru [DataStart, DataEnd]:
+// numar comenzi, suma incasata (mancare + transport - discount, fara cele anulate),
+// numar comenzi anulate, plus defalcarea pe zile.
 public class RaportVanzariDto
 {
     public DateTime DataStart { get; set; }
     public DateTime DataEnd { get; set; }
 
-    /// <summary>Toate comenzile plasate in perioada, indiferent de stare.</summary>
+    // Toate comenzile plasate in perioada, indiferent de stare.
     public int NumarComenzi { get; set; }
 
     public int NumarComenziAnulate { get; set; }
 
-    /// <summary>Suma incasata in perioada (exclude comenzile anulate).</summary>
+    // Suma incasata in perioada (exclude comenzile anulate).
     public decimal SumaTotalaIncasata { get; set; }
 
     public List<VanzareZilnicaDto> Zile { get; set; } = new();

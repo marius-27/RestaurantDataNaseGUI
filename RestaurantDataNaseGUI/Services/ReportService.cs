@@ -9,19 +9,13 @@ using RestaurantDataNaseGUI.Models.DTOs.Reports;
 
 namespace RestaurantDataNaseGUI.Services;
 
-/// <summary>
-/// Implementare IReportService. Toate rapoartele sunt EF Core LINQ pur:
-/// filtrarea pe interval de date si sumele per-comanda/per-linie (proiectate
-/// prin Select) sunt translatate de provider in SQL parametrizat; gruparea
-/// finala (pe zi/preparat/categorie) se face cu GroupBy peste setul deja
-/// filtrat, in memorie - acelasi tipar folosit deja in
-/// OrderService.GetComenziClientAsync (grupare in memorie dupa incarcare).
-///
-/// "Comanda anulata" e determinata prin Comanda.Stare.Denumire == "anulata"
-/// (nu exista o coloana booleana dedicata - vezi Comanda.cs), la fel ca
-/// StariFinale din OrderService, dar aici ne intereseaza strict anularea, nu
-/// si livrarea, deci setul e mai restrans (doar "anulata").
-/// </summary>
+// Implementare IReportService. Rapoartele sunt EF Core LINQ pur: filtrarea pe
+// interval si sumele per-comanda/per-linie sunt translatate in SQL de
+// provider; gruparea finala (zi/preparat/categorie) se face cu GroupBy in
+// memorie, ca in OrderService.GetComenziClientAsync.
+// "Comanda anulata" e Comanda.Stare.Denumire == "anulata" (nu exista coloana
+// booleana dedicata); spre deosebire de StariFinale din OrderService, aici
+// intereseaza doar anularea, nu si livrarea.
 public class ReportService : IReportService
 {
     private static readonly HashSet<string> StariAnulate = new(StringComparer.OrdinalIgnoreCase)
@@ -222,13 +216,9 @@ public class ReportService : IReportService
         }
     }
 
-    /// <summary>
-    /// dataStart/dataEnd vin dintr-un selector de date (fara ora) - intervalul
-    /// e tratat ca inclusiv la ambele capete, deci limita superioara e
-    /// normalizata la inceputul zilei urmatoare pentru o comparatie
-    /// "DataComanda &lt; sfarsitExclusiv" care include toate orele din
-    /// dataEnd.
-    /// </summary>
+    // dataStart/dataEnd vin fara ora si sunt inclusive la ambele capete, deci
+    // limita superioara e mutata la inceputul zilei urmatoare pentru
+    // "DataComanda &lt; sfarsitExclusiv", care include toate orele din dataEnd.
     private static (DateTime Start, DateTime SfarsitExclusiv) NormalizeazaInterval(DateTime dataStart, DateTime dataEnd)
     {
         return (dataStart.Date, dataEnd.Date.AddDays(1));

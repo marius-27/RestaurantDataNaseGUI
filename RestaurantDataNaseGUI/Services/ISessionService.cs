@@ -3,17 +3,17 @@ using RestaurantDataNaseGUI.Models;
 
 namespace RestaurantDataNaseGUI.Services;
 
-/// <summary>Tine minte utilizatorul autentificat curent, in memorie, pe durata rularii aplicatiei.</summary>
+// Tine minte utilizatorul autentificat curent, in memorie, pe durata rularii aplicatiei.
 public interface ISessionService
 {
-    /// <summary>Utilizatorul autentificat curent, sau null daca nimeni nu e autentificat.</summary>
+    // Utilizatorul autentificat curent, sau null daca nimeni nu e autentificat.
     Utilizator? CurrentUser { get; }
 
     bool EsteAutentificat { get; }
     bool EsteAngajat { get; }
     bool EsteClient { get; }
 
-    /// <summary>Se declanseaza la login si la logout, ca ViewModel-urile sa poata reactiona.</summary>
+    // Se declanseaza la login si la logout, ca ViewModel-urile sa poata reactiona.
     event EventHandler? CurrentUserChanged;
 
     void SetCurrentUser(Utilizator utilizator);

@@ -276,11 +276,8 @@ static async Task<Dictionary<string, Preparat>> SeedPreparateAsync(
     return (await adminService.GetPreparateAsync()).ToDictionary(p => p.Denumire, StringComparer.Ordinal);
 }
 
-/// <summary>
-/// Locatia folderului cu poze demo (tools/SeedData/Images) - incearca intai
-/// directorul curent (cazul uzual, "dotnet run" din tools/SeedData), apoi
-/// langa executabil (fallback dupa build/publish).
-/// </summary>
+// Locatia folderului cu poze demo (tools/SeedData/Images): incearca intai
+// directorul curent ("dotnet run"), apoi langa executabil (fallback build/publish).
 static string GetImaginiDirectory()
 {
     string[] candidati =

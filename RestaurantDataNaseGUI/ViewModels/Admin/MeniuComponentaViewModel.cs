@@ -2,7 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace RestaurantDataNaseGUI.ViewModels.Admin;
 
-/// <summary>O componenta (preparat + cantitate) din formularul de Meniu (MeniuAdminViewModel).</summary>
+// Componenta (preparat + cantitate) din formularul de Meniu (MeniuAdminViewModel).
 public partial class MeniuComponentaViewModel : ViewModelBase
 {
     public int PreparatId { get; }

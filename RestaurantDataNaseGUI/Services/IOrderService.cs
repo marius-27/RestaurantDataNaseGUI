@@ -5,79 +5,58 @@ using RestaurantDataNaseGUI.Models.DTOs;
 
 namespace RestaurantDataNaseGUI.Services;
 
-/// <summary>Calculul costului si crearea comenzilor pentru clienti autentificati.</summary>
+// Calculul costului si crearea comenzilor pentru clienti autentificati.
 public interface IOrderService
 {
-    /// <summary>
-    /// Calculeaza subtotalul, discountul (daca se aplica) si costul de
-    /// transport pentru cosul dat, fara sa creeze nicio comanda - util
-    /// pentru un ecran de "cos" care afiseaza totalul inainte de confirmare.
-    /// </summary>
+    // Calculeaza subtotalul, discountul (daca se aplica) si costul de
+    // transport pentru cosul dat, fara sa creeze o comanda - util pentru
+    // un ecran de "cos" care afiseaza totalul inainte de confirmare.
     Task<CalculComandaDto> CalculeazaCostComandaAsync(
         List<ArticolCosDto> articole,
         int utilizatorId,
         CancellationToken cancellationToken = default);
 
-    /// <summary>
-    /// Creeaza o comanda noua pentru <paramref name="utilizatorId"/> (trebuie
-    /// sa fie clientul autentificat curent - vezi ISessionService), dupa ce
-    /// verifica disponibilitatea tuturor articolelor din cos. Calculeaza
-    /// costurile prin <see cref="CalculeazaCostComandaAsync"/> si insereaza
-    /// antetul + liniile de comanda intr-o singura tranzactie EF Core.
-    /// </summary>
+    // Creeaza o comanda noua pentru utilizatorId (trebuie sa fie clientul
+    // autentificat curent), dupa verificarea disponibilitatii articolelor.
+    // Calculeaza costurile prin CalculeazaCostComandaAsync si insereaza
+    // antetul + liniile intr-o singura tranzactie EF Core.
     Task<OrderResult> CreeazaComandaAsync(
         List<ArticolCosDto> articole,
         int utilizatorId,
         CancellationToken cancellationToken = default);
 
-    /// <summary>
-    /// Toate comenzile lui <paramref name="utilizatorId"/>, cu articolele
-    /// lor, cele mai recente primele. Foloseste
-    /// StoredProcedureRepository.GetComenziClientCuDetaliiAsync (un rand per
-    /// articol de comanda) si grupeaza randurile dupa ComandaId.
-    /// </summary>
+    // Toate comenzile lui utilizatorId, cu articolele lor, cele mai recente
+    // primele. Foloseste GetComenziClientCuDetaliiAsync (un rand per articol)
+    // si grupeaza randurile dupa ComandaId.
     Task<List<ComandaClientDto>> GetComenziClientAsync(
         int utilizatorId,
         CancellationToken cancellationToken = default);
 
-    /// <summary>
-    /// Anuleaza o comanda activa (nici "livrata", nici deja "anulata") a lui
-    /// <paramref name="utilizatorId"/>. Verifica prin EF Core ca acea comanda
-    /// chiar apartine utilizatorului dat inainte de a-i schimba starea.
-    /// </summary>
+    // Anuleaza o comanda activa (nici "livrata", nici deja "anulata") a lui
+    // utilizatorId; verifica intai ca ii apartine cu adevarat.
     Task<OrderResult> AnuleazaComandaAsync(
         int comandaId,
         int utilizatorId,
         CancellationToken cancellationToken = default);
 
-    /// <summary>
-    /// Toate comenzile, ale tuturor clientilor, cu datele clientului incluse
-    /// - doar pentru angajati autentificati (arunca UnauthorizedAccessException
-    /// altfel). Sortate descrescator dupa data.
-    /// </summary>
+    // Toate comenzile tuturor clientilor, cu datele clientului incluse,
+    // sortate descrescator dupa data - doar pentru angajati autentificati
+    // (altfel arunca UnauthorizedAccessException).
     Task<List<ComandaAngajatDto>> GetToateComenzileAsync(CancellationToken cancellationToken = default);
 
-    /// <summary>Ca GetToateComenzileAsync, filtrat pe comenzile active (nelivrate, neanulate).</summary>
+    // Ca GetToateComenzileAsync, filtrat pe comenzile active (nelivrate, neanulate).
     Task<List<ComandaAngajatDto>> GetComenziActiveAngajatAsync(CancellationToken cancellationToken = default);
 
-    /// <summary>
-    /// Starile in care se poate trece direct din <paramref name="stareCurenta"/>
-    /// (vezi tranzitiile valide documentate in OrderService). Lista goala
-    /// daca <paramref name="stareCurenta"/> e o stare finala sau necunoscuta.
-    /// </summary>
+    // Starile in care se poate trece direct din stareCurenta (vezi tranzitiile
+    // valide din OrderService). Lista goala daca stareCurenta e finala sau necunoscuta.
     IReadOnlyList<string> GetStariUrmatoarePosibile(string stareCurenta);
 
-    /// <summary>
-    /// Schimba starea unei comenzi - doar pentru angajati autentificati.
-    /// Respinge tranzitia daca starea curenta e finala ("livrata"/"anulata")
-    /// sau daca <paramref name="stareNoua"/> nu e o tranzitie valida din
-    /// starea curenta (vezi GetStariUrmatoarePosibile). Daca
-    /// <paramref name="stareNoua"/> e "se pregateste", dupa actualizarea
-    /// starii apeleaza automat
-    /// StoredProcedureRepository.UpdateCantitateTotalaLaComandaAsync, in
-    /// aceeasi tranzactie - daca scaderea stocului esueaza (stoc
-    /// insuficient), intreaga schimbare de stare e anulata.
-    /// </summary>
+    // Schimba starea unei comenzi - doar pentru angajati autentificati.
+    // Respinge tranzitia daca starea curenta e finala ("livrata"/"anulata")
+    // sau daca stareNoua nu e valida din starea curenta (vezi
+    // GetStariUrmatoarePosibile). Daca stareNoua e "se pregateste", apeleaza
+    // automat UpdateCantitateTotalaLaComandaAsync in aceeasi tranzactie -
+    // daca scaderea stocului esueaza, toata schimbarea e anulata.
     Task<OrderResult> SchimbaStareComandaAsync(
         int comandaId,
         string stareNoua,

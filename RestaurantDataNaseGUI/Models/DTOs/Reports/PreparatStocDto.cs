@@ -1,9 +1,6 @@
 namespace RestaurantDataNaseGUI.Models.DTOs.Reports;
 
-/// <summary>
-/// O linie din IReportService.RaportStocCurentAsync - stocul curent al unui
-/// preparat, sortat pe categorie apoi denumire pentru afisare grupata.
-/// </summary>
+// Linie din IReportService.RaportStocCurentAsync: stocul curent, sortat pe categorie apoi denumire pentru afisare grupata.
 public class PreparatStocDto
 {
     public int Id { get; set; }

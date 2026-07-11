@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace RestaurantDataNaseGUI.Models.DTOs;
 
-/// <summary>Datele unui formular de creare/editare Preparat. Id = 0 inseamna preparat nou.</summary>
+// Formular de creare/editare Preparat. Id = 0 inseamna preparat nou.
 public class PreparatFormDto
 {
     public int Id { get; set; }
@@ -14,9 +14,9 @@ public class PreparatFormDto
     public int CategorieId { get; set; }
     public bool Disponibil { get; set; } = true;
 
-    /// <summary>Id-urile alergenilor selectati pentru acest preparat - inlocuiesc integral asocierile existente la Update.</summary>
+    // Id-uri alergeni selectati - inlocuiesc integral asocierile existente la Update.
     public List<int> AlergenIds { get; set; } = new();
 
-    /// <summary>Caile de imagine ale preparatului - inlocuiesc integral imaginile existente la Update.</summary>
+    // Caile de imagine ale preparatului - inlocuiesc integral imaginile existente la Update.
     public List<string> ImaginiPaths { get; set; } = new();
 }

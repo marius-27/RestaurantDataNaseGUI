@@ -1,10 +1,7 @@
 namespace RestaurantDataNaseGUI.Models;
 
-/// <summary>
-/// Tabel generic cheie-valoare pentru parametrii aplicatiei (ex. procente de
-/// discount, praguri de stoc). Toate valorile trebuie citite din acest tabel
-/// la runtime, niciodata hardcodate in cod C#.
-/// </summary>
+// Tabel cheie-valoare pentru parametrii aplicatiei (discount, praguri stoc
+// etc.) - valorile se citesc din DB la runtime, niciodata hardcodate in C#.
 public class Configurare
 {
     public int Id { get; set; }

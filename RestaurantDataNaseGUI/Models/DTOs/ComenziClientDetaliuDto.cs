@@ -2,12 +2,8 @@ using System;
 
 namespace RestaurantDataNaseGUI.Models.DTOs;
 
-/// <summary>
-/// O linie din rezultatul dbo.sp_GetComenziClientCuDetalii - o comanda cu
-/// starea ei si o singura linie de detaliu (Preparat sau Meniu). Tip
-/// "keyless" folosit doar cu FromSqlInterpolated, nu este o entitate cu
-/// echivalent 1:1 intr-un tabel.
-/// </summary>
+// O linie din dbo.sp_GetComenziClientCuDetalii: comanda + o linie de detaliu
+// (Preparat/Meniu). Tip keyless, folosit doar cu FromSqlInterpolated.
 public class ComenziClientDetaliuDto
 {
     public int ComandaId { get; set; }
@@ -19,7 +15,7 @@ public class ComenziClientDetaliuDto
     public DateTime? OraEstimataLivrare { get; set; }
     public int DetaliuId { get; set; }
 
-    /// <summary>"Preparat" sau "Meniu".</summary>
+    // "Preparat" sau "Meniu".
     public string TipArticol { get; set; } = string.Empty;
     public string DenumireArticol { get; set; } = string.Empty;
     public decimal Cantitate { get; set; }

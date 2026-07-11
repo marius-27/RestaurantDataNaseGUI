@@ -5,35 +5,25 @@ using RestaurantDataNaseGUI.Models.DTOs;
 
 namespace RestaurantDataNaseGUI.Services;
 
-/// <summary>Citirea si cautarea in meniul restaurantului (preparate individuale + meniuri compuse).</summary>
+// Citirea si cautarea in meniul restaurantului (preparate individuale + meniuri compuse).
 public interface IMenuService
 {
-    /// <summary>
-    /// Toate categoriile din meniu, fiecare cu preparatele si meniurile
-    /// aferente. Itemii indisponibili sunt inclusi (nu filtrati), marcati
-    /// prin <see cref="MeniuAfisareDto.EsteIndisponibil"/>.
-    /// </summary>
+    // Toate categoriile din meniu, cu preparatele si meniurile aferente.
+    // Itemii indisponibili sunt inclusi (nu filtrati), marcati prin EsteIndisponibil.
     Task<List<CategorieMeniuDto>> GetMeniuRestaurantAsync(CancellationToken cancellationToken = default);
 
-    /// <summary>
-    /// Filtreaza preparatele si meniurile a caror denumire contine
-    /// <paramref name="cuvantCheie"/> (case-insensitive), grupate pe
-    /// categorie la fel ca <see cref="GetMeniuRestaurantAsync"/>.
-    /// </summary>
+    // Filtreaza preparatele si meniurile a caror denumire contine cuvantCheie
+    // (case-insensitive), grupate pe categorie ca in GetMeniuRestaurantAsync.
     Task<List<CategorieMeniuDto>> CautaDupaDenumireAsync(string cuvantCheie, CancellationToken cancellationToken = default);
 
-    /// <summary>
-    /// Filtreaza dupa un alergen. Daca <paramref name="contineAlergen"/> e
-    /// true, returneaza preparatele/meniurile care AU acel alergen; daca e
-    /// false, returneaza cele care NU il au deloc (pentru meniuri: niciun
-    /// preparat component nu il contine). Grupate pe categorie la fel ca
-    /// <see cref="GetMeniuRestaurantAsync"/>.
-    /// </summary>
+    // Filtreaza dupa un alergen: daca contineAlergen e true, returneaza cele
+    // care AU acel alergen; altfel, cele care NU il au deloc (pentru meniuri:
+    // niciun preparat component nu il contine). Grupate ca in GetMeniuRestaurantAsync.
     Task<List<CategorieMeniuDto>> CautaDupaAlergenAsync(
         string numeAlergen,
         bool contineAlergen,
         CancellationToken cancellationToken = default);
 
-    /// <summary>Denumirile tuturor alergenilor din baza de date, sortate alfabetic - pentru un ComboBox de cautare.</summary>
+    // Denumirile tuturor alergenilor din baza de date, sortate alfabetic - pentru un ComboBox de cautare.
     Task<List<string>> GetAlergeniDisponibiliAsync(CancellationToken cancellationToken = default);
 }

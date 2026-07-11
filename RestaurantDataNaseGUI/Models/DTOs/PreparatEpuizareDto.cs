@@ -1,9 +1,6 @@
 namespace RestaurantDataNaseGUI.Models.DTOs;
 
-/// <summary>
-/// O linie din rezultatul dbo.sp_GetPreparateApropiateDeEpuizare. Tip
-/// "keyless" folosit doar cu FromSqlInterpolated.
-/// </summary>
+// Linie din dbo.sp_GetPreparateApropiateDeEpuizare; tip keyless, doar pentru FromSqlInterpolated.
 public class PreparatEpuizareDto
 {
     public int Id { get; set; }

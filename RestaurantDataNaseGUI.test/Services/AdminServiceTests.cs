@@ -11,20 +11,10 @@ using Xunit;
 
 namespace RestaurantDataNaseGUI.test.Services;
 
-/// <summary>
-/// Teste unitare pentru AdminService, pe o baza SQLite in-memory. Acopera
-/// regulile de blocare a stergerii si validarile de formular care sunt
-/// verificate integral in C#, inainte de a atinge baza de date.
-///
-/// NOTA - un scenariu explicit cerut ("stergere preparat folosit intr-o
-/// comanda declanseaza soft-delete") NU e testabil aici: acea cale de cod
-/// (StergePreparatAsync -> StoredProcedureRepository.SetPreparatIndisponibilAsync)
-/// executa direct "EXEC dbo.sp_SetPreparatIndisponibil ..." - o procedura
-/// stocata T-SQL care nu exista pe SQLite. E testat in schimb impotriva SQL
-/// Server real, in Integration/AdminServiceIntegrationTests.cs. Aici testam
-/// in loc celalalt caz de blocare a stergerii unui Preparat (parte dintr-un
-/// meniu), care e verificat integral prin LINQ, fara procedura stocata.
-/// </summary>
+// Teste unitare pentru AdminService pe SQLite in-memory: reguli de blocare a stergerii si validari de formular, verificate in C#.
+// NOTA: scenariul "stergere preparat folosit intr-o comanda -> soft-delete" foloseste o procedura stocata T-SQL (nu exista pe
+// SQLite) si e testat separat, in Integration/AdminServiceIntegrationTests.cs. Aici testam doar blocarea stergerii unui
+// Preparat care face parte dintr-un meniu (verificata integral prin LINQ).
 public sealed class AdminServiceTests : IDisposable
 {
     private readonly SqliteInMemoryDbContextFactory _dbFactory = new();

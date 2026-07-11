@@ -9,15 +9,10 @@ using RestaurantDataNaseGUI.Models.DTOs;
 
 namespace RestaurantDataNaseGUI.Data;
 
-/// <summary>
-/// Apeleaza cele 7 proceduri stocate din database/schema.sql. Toate metodele
-/// folosesc FromSqlInterpolated / ExecuteSqlInterpolatedAsync (parametri
-/// interpolati -> DbParameter reali), niciodata FromSqlRaw cu concatenare de
-/// string, pentru a evita SQL Injection. Singura exceptie este
-/// CreateComandaAsync, care are parametri OUTPUT si de aceea foloseste
-/// ADO.NET direct (SqlCommand + SqlParameter), fiindca FromSqlInterpolated
-/// nu suporta parametri OUTPUT.
-/// </summary>
+// Apeleaza cele 7 proceduri stocate din schema.sql, prin FromSqlInterpolated
+// / ExecuteSqlInterpolatedAsync (parametri reali, niciodata FromSqlRaw cu
+// concatenare - evita SQL Injection). Exceptie: CreateComandaAsync foloseste
+// ADO.NET direct, fiindca are parametri OUTPUT.
 public class StoredProcedureRepository
 {
     private readonly RestaurantDbContext _context;
@@ -27,10 +22,8 @@ public class StoredProcedureRepository
         _context = context;
     }
 
-    /// <summary>
-    /// dbo.sp_CreateComanda - creeaza antetul unei comenzi noi si returneaza
-    /// Id-ul generat si codul unic (parametri OUTPUT in procedura).
-    /// </summary>
+    // dbo.sp_CreateComanda - creeaza antetul comenzii, returneaza Id si cod
+    // unic (parametri OUTPUT).
     public async Task<(int ComandaId, string CodUnic)> CreateComandaAsync(
         int utilizatorId,
         decimal costTransport = 0m,
@@ -79,10 +72,8 @@ public class StoredProcedureRepository
         }
     }
 
-    /// <summary>
-    /// dbo.sp_AdaugaDetaliuComanda - adauga o linie intr-o comanda existenta.
-    /// Trebuie specificat exact unul dintre preparatId / meniuId.
-    /// </summary>
+    // dbo.sp_AdaugaDetaliuComanda - adauga o linie in comanda; exact unul
+    // dintre preparatId/meniuId trebuie completat.
     public async Task AdaugaDetaliuComandaAsync(
         int comandaId,
         int? preparatId,
@@ -95,10 +86,8 @@ public class StoredProcedureRepository
             cancellationToken);
     }
 
-    /// <summary>
-    /// dbo.sp_UpdateCantitateTotalaLaComanda - scade din stoc cantitatile
-    /// consumate de o comanda (preparate directe + preparate din meniuri).
-    /// </summary>
+    // dbo.sp_UpdateCantitateTotalaLaComanda - scade din stoc cantitatile
+    // comenzii (preparate directe + din meniuri).
     public async Task UpdateCantitateTotalaLaComandaAsync(int comandaId, CancellationToken cancellationToken = default)
     {
         await _context.Database.ExecuteSqlInterpolatedAsync(
@@ -106,10 +95,8 @@ public class StoredProcedureRepository
             cancellationToken);
     }
 
-    /// <summary>
-    /// dbo.sp_GetComenziClientCuDetalii [interogare complexa] - toate
-    /// comenzile unui client, cu liniile de detaliu si subtotalul fiecareia.
-    /// </summary>
+    // dbo.sp_GetComenziClientCuDetalii - comenzile unui client, cu liniile
+    // de detaliu si subtotalul fiecareia.
     public async Task<List<ComenziClientDetaliuDto>> GetComenziClientCuDetaliiAsync(
         int utilizatorId,
         CancellationToken cancellationToken = default)
@@ -119,11 +106,9 @@ public class StoredProcedureRepository
             .ToListAsync(cancellationToken);
     }
 
-    /// <summary>
-    /// dbo.sp_GetPreparateApropiateDeEpuizare - preparatele cu stoc sub prag.
-    /// Daca <paramref name="pragCantitate"/> este null, procedura preia
-    /// pragul implicit din dbo.Configurare (cheia PragStocEpuizare).
-    /// </summary>
+    // dbo.sp_GetPreparateApropiateDeEpuizare - preparate cu stoc sub prag;
+    // daca pragCantitate e null, foloseste pragul din dbo.Configurare
+    // (cheia PragStocEpuizare).
     public async Task<List<PreparatEpuizareDto>> GetPreparateApropiateDeEpuizareAsync(
         decimal? pragCantitate = null,
         CancellationToken cancellationToken = default)
@@ -133,11 +118,8 @@ public class StoredProcedureRepository
             .ToListAsync(cancellationToken);
     }
 
-    /// <summary>
-    /// dbo.sp_GetMeniuRestaurantCuAlergeni [interogare complexa] - toate
-    /// meniurile, cu pretul calculat dinamic si alergenii agregati din
-    /// toate preparatele componente.
-    /// </summary>
+    // dbo.sp_GetMeniuRestaurantCuAlergeni - meniurile, cu pret calculat
+    // dinamic si alergenii agregati din preparatele componente.
     public async Task<List<MeniuCuAlergeniDto>> GetMeniuRestaurantCuAlergeniAsync(
         CancellationToken cancellationToken = default)
     {
@@ -146,10 +128,8 @@ public class StoredProcedureRepository
             .ToListAsync(cancellationToken);
     }
 
-    /// <summary>
-    /// dbo.sp_SetPreparatIndisponibil - soft-delete: marcheaza un preparat ca
-    /// indisponibil (Disponibil = 0) in loc sa il stearga fizic.
-    /// </summary>
+    // dbo.sp_SetPreparatIndisponibil - soft-delete: marcheaza preparatul
+    // indisponibil in loc sa-l stearga.
     public async Task SetPreparatIndisponibilAsync(int preparatId, CancellationToken cancellationToken = default)
     {
         await _context.Database.ExecuteSqlInterpolatedAsync(

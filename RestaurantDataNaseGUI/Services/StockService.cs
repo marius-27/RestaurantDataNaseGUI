@@ -7,7 +7,7 @@ using RestaurantDataNaseGUI.Models.DTOs;
 
 namespace RestaurantDataNaseGUI.Services;
 
-/// <summary>Implementare IStockService, separata de AdminService fiindca nu e CRUD - doar citire de stoc.</summary>
+// Implementare IStockService, separata de AdminService fiindca nu e CRUD - doar citire de stoc.
 public class StockService : IStockService
 {
     private readonly ISessionService _sessionService;

@@ -3,10 +3,10 @@ using System.Threading.Tasks;
 
 namespace RestaurantDataNaseGUI.Services;
 
-/// <summary>Inregistrare si autentificare pentru clienti, peste RestaurantDbContext.</summary>
+// Inregistrare si autentificare pentru clienti, peste RestaurantDbContext.
 public interface IAuthService
 {
-    /// <summary>Creeaza un Utilizator nou cu TipUtilizator = "Client".</summary>
+    // Creeaza un Utilizator nou cu TipUtilizator = "Client".
     Task<AuthResult> RegisterAsync(
         string nume,
         string prenume,
@@ -16,7 +16,7 @@ public interface IAuthService
         string parola,
         CancellationToken cancellationToken = default);
 
-    /// <summary>Cauta utilizatorul dupa email si verifica parola.</summary>
+    // Cauta utilizatorul dupa email si verifica parola.
     Task<AuthResult> LoginAsync(
         string email,
         string parola,

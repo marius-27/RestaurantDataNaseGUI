@@ -6,7 +6,7 @@ using RestaurantDataNaseGUI.ViewModels;
 
 namespace RestaurantDataNaseGUI;
 
-/// <summary>Returneaza view-ul pentru un view model.</summary>
+// Returneaza view-ul pentru un view model.
 [RequiresUnreferencedCode(
     "Default implementation of ViewLocator involves reflection which may be trimmed away.",
     Url = "https://docs.avaloniaui.net/docs/concepts/view-locator")]

@@ -2,7 +2,7 @@ using RestaurantDataNaseGUI.Models;
 
 namespace RestaurantDataNaseGUI.Services;
 
-/// <summary>Rezultatul unei operatii de autentificare/inregistrare din <see cref="IAuthService"/>.</summary>
+// Rezultatul unei operatii de autentificare/inregistrare din IAuthService.
 public sealed class AuthResult
 {
     public bool Succes { get; }

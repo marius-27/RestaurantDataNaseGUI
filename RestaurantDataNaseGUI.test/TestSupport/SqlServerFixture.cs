@@ -4,21 +4,9 @@ using RestaurantDataNaseGUI.Data;
 
 namespace RestaurantDataNaseGUI.test.TestSupport;
 
-/// <summary>
-/// Connection string catre un SQL Server real (containerul din
-/// docker/docker-compose.yml, cu schema deja aplicata - vezi
-/// docker/init-db.sh), citit din variabila de mediu
-/// RESTAURANT_TEST_CONNECTION_STRING. NU exista o parola implicita
-/// hardcodata aici (nici macar una placeholder) - fiecare masina/CI isi
-/// seteaza propria variabila inainte de a rula testele de integrare (vezi
-/// RestaurantDataNaseGUI.test/README.md).
-///
-/// Aruncat o singura data per clasa de test care il foloseste (xUnit
-/// instantiaza fixture-ul o singura data per colectie, nu per test - vezi
-/// <see cref="IntegrationTestCollection"/>), cu un mesaj clar daca variabila
-/// lipseste, in loc sa lase testele sa esueze cu o eroare de conexiune
-/// greu de inteles.
-/// </summary>
+// Connection string catre SQL Server real (container docker/docker-compose.yml, schema deja aplicata), citit din
+// RESTAURANT_TEST_CONNECTION_STRING - fara parola hardcodata; fiecare masina/CI isi seteaza propria variabila.
+// Instantiat o singura data per colectie (vezi IntegrationTestCollection); arunca eroare clara daca variabila lipseste.
 public sealed class SqlServerFixture
 {
     public string ConnectionString { get; }
@@ -45,13 +33,8 @@ public sealed class SqlServerFixture
     }
 }
 
-/// <summary>
-/// Toate testele de integrare impart aceeasi colectie xUnit, ca sa ruleze
-/// secvential (nu in paralel) impotriva aceleiasi baze de date reale -
-/// evita contentie/deadlock-uri intre teste care scriu in acelasi timp in
-/// Comanda/Preparat. Testele unitare (Sqlite in-memory, izolate per test)
-/// nu sunt afectate - raman in colectiile implicite si ruleaza in paralel.
-/// </summary>
+// Testele de integrare impart aceeasi colectie xUnit, ca sa ruleze secvential (nu in paralel) impotriva aceleiasi baze
+// de date reale - evita contentie/deadlock intre teste care scriu in Comanda/Preparat. Testele unitare (Sqlite in-memory) nu sunt afectate.
 [CollectionDefinition("Integration")]
 public sealed class IntegrationTestCollection : ICollectionFixture<SqlServerFixture>
 {

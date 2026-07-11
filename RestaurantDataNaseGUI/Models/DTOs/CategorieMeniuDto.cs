@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace RestaurantDataNaseGUI.Models.DTOs;
 
-/// <summary>O categorie din meniu, cu preparatele si meniurile aferente deja grupate.</summary>
+// O categorie din meniu, cu preparatele/meniurile deja grupate.
 public class CategorieMeniuDto
 {
     public string Denumire { get; set; } = string.Empty;

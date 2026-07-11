@@ -10,10 +10,8 @@ using RestaurantDataNaseGUI.Services;
 
 namespace RestaurantDataNaseGUI.ViewModels;
 
-/// <summary>
-/// Comenzile clientului autentificat curent: lista completa, urmarirea
-/// comenzilor active (nelivrate, neanulate) si anularea unei comenzi active.
-/// </summary>
+// Comenzile clientului curent: lista completa, comenzile active (nelivrate,
+// neanulate) si anularea uneia active.
 public partial class MyOrdersViewModel : ViewModelBase
 {
     private readonly IOrderService _orderService;
@@ -34,10 +32,10 @@ public partial class MyOrdersViewModel : ViewModelBase
     [ObservableProperty]
     private string? _mesajEroare;
 
-    /// <summary>Comenzile nelivrate si neanulate - subset de ToateComenzile.</summary>
+    // Comenzile nelivrate si neanulate, subset de ToateComenzile.
     public IEnumerable<ComandaClientDto> ComenziActive => ToateComenzile.Where(c => c.EsteActiva);
 
-    /// <summary>Ce trebuie afisat in View, in functie de toggle-ul DoarActive.</summary>
+    // Ce se afiseaza in View, in functie de toggle-ul DoarActive.
     public IEnumerable<ComandaClientDto> ComenziDeAfisat => DoarActive ? ComenziActive : ToateComenzile;
 
     public MyOrdersViewModel() : this(new OrderService(), SessionService.Instance)

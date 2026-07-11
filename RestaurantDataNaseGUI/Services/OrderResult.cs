@@ -2,7 +2,7 @@ using RestaurantDataNaseGUI.Models.DTOs;
 
 namespace RestaurantDataNaseGUI.Services;
 
-/// <summary>Rezultatul unei operatii de creare a unei comenzi din <see cref="IOrderService"/>.</summary>
+// Rezultatul unei operatii de creare a unei comenzi din IOrderService.
 public sealed class OrderResult
 {
     public bool Succes { get; }
@@ -20,10 +20,7 @@ public sealed class OrderResult
         MesajEroare = mesajEroare;
     }
 
-    /// <summary>
-    /// <paramref name="calcul"/> e null pentru operatii care nu implica un
-    /// calcul de cost (ex. anularea unei comenzi existente).
-    /// </summary>
+    // calcul e null pentru operatii fara calcul de cost (ex. anulare comanda).
     public static OrderResult Ok(int comandaId, string codUnic, CalculComandaDto? calcul = null) =>
         new(true, comandaId, codUnic, calcul, null);
 

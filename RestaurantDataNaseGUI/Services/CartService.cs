@@ -5,13 +5,9 @@ using RestaurantDataNaseGUI.Models.DTOs;
 
 namespace RestaurantDataNaseGUI.Services;
 
-/// <summary>
-/// Implementare in-memory a ICartService. La fel ca SessionService,
-/// <see cref="Instance"/> ofera un singleton simplu folosit implicit de
-/// ViewModels cat timp proiectul nu are inca un container DI. Se aboneaza la
-/// ISessionService.CurrentUserChanged si goleste automat cosul la logout -
-/// cosul unui client nu trebuie sa supravietuiasca sesiunii lui.
-/// </summary>
+// Implementare in-memory a ICartService. Ca SessionService, Instance e un
+// singleton simplu folosit de ViewModels cat timp nu exista DI. Se goleste
+// automat la logout (cosul nu trebuie sa supravietuiasca sesiunii).
 public sealed class CartService : ICartService
 {
     public static CartService Instance { get; } = new(SessionService.Instance);

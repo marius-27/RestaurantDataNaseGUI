@@ -9,11 +9,8 @@ using RestaurantDataNaseGUI.Services;
 
 namespace RestaurantDataNaseGUI.ViewModels.Admin;
 
-/// <summary>
-/// Vizualizarea tuturor comenzilor (sau doar a celor active) si schimbarea
-/// starii unei comenzi - doar pentru angajati autentificati (verificat de
-/// IOrderService).
-/// </summary>
+// Vizualizeaza toate comenzile (sau doar cele active) si schimba starea lor,
+// doar pentru angajati (verificat de IOrderService).
 public partial class ToateComenzileViewModel : ViewModelBase
 {
     private readonly IOrderService _orderService;
@@ -33,11 +30,11 @@ public partial class ToateComenzileViewModel : ViewModelBase
     [ObservableProperty]
     private string? _mesajEroare;
 
-    /// <summary>Ce trebuie afisat in View, in functie de toggle-ul DoarActive.</summary>
+    // Ce se afiseaza in View, in functie de toggle-ul DoarActive.
     public IEnumerable<ComandaAngajatRandViewModel> ComenziDeAfisat =>
         DoarActive ? Comenzi.Where(c => c.Comanda.EsteActiva) : Comenzi;
 
-    /// <summary>Pentru un shell viitor, care sa decida daca arata acest ecran doar angajatilor.</summary>
+    // Pentru un shell viitor: arata acest ecran doar angajatilor.
     public bool PoateAdministra => _sessionService.EsteAngajat;
 
     public ToateComenzileViewModel() : this(new OrderService(), SessionService.Instance)

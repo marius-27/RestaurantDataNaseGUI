@@ -10,13 +10,13 @@ public class Utilizator
     public string Email { get; set; } = string.Empty;
     public string Telefon { get; set; } = string.Empty;
 
-    /// <summary>Optionala - fara sens pentru un Angajat.</summary>
+    // Optionala - fara sens pentru un Angajat.
     public string? AdresaLivrare { get; set; }
 
-    /// <summary>Doar hash-ul parolei, niciodata parola in clar.</summary>
+    // Doar hash-ul parolei, niciodata parola in clar.
     public string ParolaHash { get; set; } = string.Empty;
 
-    /// <summary>"Client" sau "Angajat" - vezi CK_Utilizator_TipUtilizator din schema.sql.</summary>
+    // "Client" sau "Angajat" - vezi CK_Utilizator_TipUtilizator din schema.sql.
     public string TipUtilizator { get; set; } = string.Empty;
 
     public ICollection<Comanda> Comenzi { get; set; } = new List<Comanda>();

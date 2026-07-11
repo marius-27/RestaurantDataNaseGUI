@@ -4,7 +4,7 @@ using RestaurantDataNaseGUI.Models.DTOs;
 
 namespace RestaurantDataNaseGUI.ViewModels;
 
-/// <summary>O categorie afisata in MenuView, cu preparatele/meniurile ei ca lista bindabila.</summary>
+// Categorie afisata in MenuView, cu preparatele/meniurile ei ca lista bindabila.
 public class CategorieGrupataViewModel
 {
     public string Denumire { get; }

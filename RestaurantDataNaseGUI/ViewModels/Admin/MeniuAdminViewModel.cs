@@ -10,12 +10,8 @@ using RestaurantDataNaseGUI.Services;
 
 namespace RestaurantDataNaseGUI.ViewModels.Admin;
 
-/// <summary>
-/// CRUD pentru Meniu, accesibil doar angajatilor (verificat de
-/// IAdminService). Componentele (preparat + cantitate) sunt o lista
-/// editabila: se alege un preparat si o cantitate, se apasa "Adauga", apoi
-/// se poate sterge orice rand inainte de a salva meniul.
-/// </summary>
+// CRUD Meniu, doar pentru angajati (verificat de IAdminService). Componentele (preparat + cantitate) sunt o lista
+// editabila: alegi preparat si cantitate, apesi "Adauga", poti sterge orice rand inainte de a salva.
 public partial class MeniuAdminViewModel : ViewModelBase
 {
     private readonly IAdminService _adminService;

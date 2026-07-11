@@ -8,7 +8,7 @@ using RestaurantDataNaseGUI.Services;
 
 namespace RestaurantDataNaseGUI.ViewModels.Admin;
 
-/// <summary>Preparatele aproape de epuizare - doar pentru angajati autentificati (verificat de IStockService).</summary>
+// Preparate aproape de epuizare, doar pentru angajati (verificat de IStockService).
 public partial class StocEpuizareViewModel : ViewModelBase
 {
     private readonly IStockService _stockService;

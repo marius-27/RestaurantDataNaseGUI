@@ -5,25 +5,10 @@ using RestaurantDataNaseGUI.Data;
 
 namespace RestaurantDataNaseGUI.test.TestSupport;
 
-/// <summary>
-/// Baza de date SQLite in-memory, o instanta noua per test (nu partajata):
-/// fiecare clasa de test xUnit e instantiata din nou pentru fiecare
-/// [Fact]/[Theory], deci un camp readonly initializat in constructor da
-/// automat izolare completa intre teste, fara curatare manuala.
-///
-/// SQLite (nu InMemory provider-ul EF Core) fiindca aplica realmente
-/// CHECK-urile si indecsii unici definiti in RestaurantDbContext
-/// (OnModelCreating) - provider-ul InMemory le ignora silentios, ceea ce ar
-/// face testele sa treaca chiar daca o constrangere reala din
-/// database/schema.sql ar fi incalcata.
-///
-/// O baza SQLite ":memory:" traieste doar cat conexiunea care a creat-o
-/// ramane deschisa - de-aia pastram o singura <see cref="SqliteConnection"/>
-/// deschisa pe durata testului si construim fiecare RestaurantDbContext nou
-/// (prin <see cref="CreateContext"/>) peste ACEEASI conexiune, la fel cum
-/// Services/*.cs creeaza cate un DbContext scurt pe apel, prin
-/// Func&lt;RestaurantDbContext&gt;, peste aceeasi baza de date reala in productie.
-/// </summary>
+// Baza SQLite in-memory, instanta noua per test - izolare completa, fara curatare manuala.
+// Foloseste SQLite (nu InMemory provider-ul EF Core) ca sa aplice realmente CHECK-urile si indecsii unici din
+// OnModelCreating, pe care InMemory le-ar ignora silentios. Conexiunea ":memory:" trebuie tinuta deschisa; CreateContext
+// creeaza cate un DbContext nou peste aceeasi conexiune, la fel ca Func<RestaurantDbContext> in productie.
 public sealed class SqliteInMemoryDbContextFactory : IDisposable
 {
     private readonly SqliteConnection _connection;

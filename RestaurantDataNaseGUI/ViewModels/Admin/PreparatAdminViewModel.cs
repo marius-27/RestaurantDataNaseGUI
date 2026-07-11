@@ -10,12 +10,9 @@ using RestaurantDataNaseGUI.Services;
 
 namespace RestaurantDataNaseGUI.ViewModels.Admin;
 
-/// <summary>
-/// CRUD pentru Preparat, accesibil doar angajatilor (verificat de
-/// IAdminService). Alergenii sunt afisati ca o lista de CheckBox-uri
-/// (AlergeniSelectabili) si imaginile ca o lista editabila de cai
-/// (ImaginiPaths, adaugare/stergere rand).
-/// </summary>
+// CRUD pentru Preparat, doar pentru angajati (verificat de IAdminService).
+// Alergenii sunt CheckBox-uri (AlergeniSelectabili), imaginile o lista
+// editabila de cai (ImaginiPaths).
 public partial class PreparatAdminViewModel : ViewModelBase
 {
     private readonly IAdminService _adminService;

@@ -11,13 +11,9 @@ using RestaurantDataNaseGUI.Models.DTOs;
 
 namespace RestaurantDataNaseGUI.Services;
 
-/// <summary>
-/// Implementare IAdminService. Fiecare metoda de Create/Update/Delete
-/// verifica intai ISessionService.EsteAngajat (via VerificaEsteAngajat) -
-/// niciun apel nu ajunge la baza de date daca userul curent nu e un angajat
-/// autentificat. Toate interogarile sunt LINQ peste EF Core, parametrizate
-/// automat de provider - nu SQL brut.
-/// </summary>
+// Implementare IAdminService. Fiecare Create/Update/Delete verifica intai
+// ISessionService.EsteAngajat (via VerificaEsteAngajat) - niciun apel nu ajunge la
+// baza de date fara un angajat autentificat. Interogari LINQ peste EF Core, nu SQL brut.
 public class AdminService : IAdminService
 {
     private const int SqlErrorUniqueConstraint = 2627;

@@ -9,12 +9,9 @@ using RestaurantDataNaseGUI.Services;
 
 namespace RestaurantDataNaseGUI.ViewModels;
 
-/// <summary>
-/// Afiseaza meniul restaurantului. Nu depinde de autentificare pentru a se
-/// putea incarca/afisa (un vizitator fara cont trebuie sa vada meniul) -
-/// starea de sesiune se foloseste doar prin <see cref="PoateComanda"/>, ca
-/// View-ul sa decida daca arata butonul de comanda.
-/// </summary>
+// Afiseaza meniul restaurantului; nu depinde de autentificare, ca un
+// vizitator fara cont sa il poata vedea. Sesiunea se foloseste doar prin
+// PoateComanda, ca View-ul sa decida daca arata butonul de comanda.
 public partial class MenuViewModel : ViewModelBase
 {
     private readonly IMenuService _menuService;
@@ -30,7 +27,7 @@ public partial class MenuViewModel : ViewModelBase
     [ObservableProperty]
     private string? _mesajEroare;
 
-    /// <summary>True doar daca e autentificat un Client - decide vizibilitatea butonului "Comanda" in View.</summary>
+    // True doar daca e autentificat un Client - decide vizibilitatea butonului "Comanda".
     public bool PoateComanda => _sessionService.EsteAutentificat && _sessionService.EsteClient;
 
     public MenuViewModel() : this(new MenuService(), SessionService.Instance, CartService.Instance)
@@ -45,7 +42,7 @@ public partial class MenuViewModel : ViewModelBase
         _sessionService.CurrentUserChanged += (_, _) => OnPropertyChanged(nameof(PoateComanda));
     }
 
-    /// <summary>Adauga itemul in cos - nu face nimic daca userul curent nu poate comanda sau daca itemul e indisponibil.</summary>
+    // Adauga itemul in cos, doar daca userul poate comanda si itemul e disponibil.
     [RelayCommand]
     private void AdaugaInCos(MeniuAfisareDto? item)
     {

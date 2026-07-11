@@ -5,17 +5,11 @@ using RestaurantDataNaseGUI.Models;
 
 namespace RestaurantDataNaseGUI.test.TestSupport;
 
-/// <summary>
-/// Seed pentru datele "lookup" pe care database/schema.sql le populeaza
-/// automat intr-o baza de date reala (StareComanda, Configurare) - vezi
-/// sectiunea "Date seed incluse" din database/README.md. Testele unitare
-/// ruleaza pe o baza SQLite goala (<see cref="SqliteInMemoryDbContextFactory"/>),
-/// deci trebuie sa recreeze acelasi seed minim ca sa poata exercita logica
-/// din OrderService care citeste din aceste tabele.
-/// </summary>
+// Seed pentru datele "lookup" (StareComanda, Configurare) pe care schema.sql le populeaza automat in productie.
+// Testele unitare ruleaza pe SQLite goala (SqliteInMemoryDbContextFactory), deci recreeaza acelasi seed minim pentru OrderService.
 public static class TestDataSeeder
 {
-    /// <summary>Cele 5 stari standard, identice cu schema.sql.</summary>
+    // Cele 5 stari standard, identice cu schema.sql.
     public static async Task SeedStariComandaAsync(RestaurantDbContext context)
     {
         context.StariComanda.AddRange(
@@ -28,12 +22,8 @@ public static class TestDataSeeder
         await context.SaveChangesAsync();
     }
 
-    /// <summary>
-    /// Cheile din dbo.Configurare folosite de OrderService.CalculeazaCostAsync,
-    /// cu aceleasi valori implicite ca seed-ul din database/schema.sql -
-    /// override-uieste orice parametru cand un test are nevoie de o alta
-    /// valoare (ex. praguri diferite).
-    /// </summary>
+    // Cheile din dbo.Configurare folosite de OrderService.CalculeazaCostAsync, cu valorile implicite din schema.sql -
+    // override-uieste orice parametru cand testul are nevoie de alta valoare.
     public static async Task SeedConfigurareComandaAsync(
         RestaurantDbContext context,
         decimal sumaMinimaComandaDiscount = 100,

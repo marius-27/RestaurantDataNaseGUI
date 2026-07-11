@@ -9,16 +9,12 @@ using RestaurantDataNaseGUI.Services;
 
 namespace RestaurantDataNaseGUI.ViewModels;
 
-/// <summary>Parametrul comenzii ModificaCantitateCommand: articolul din cos + noua cantitate ceruta.</summary>
+// Parametrul ModificaCantitateCommand: articolul din cos + noua cantitate.
 public sealed record ModificaCantitateParametru(ArticolCosDto Articol, decimal CantitateNoua);
 
-/// <summary>
-/// Cosul de comanda al clientului autentificat curent. Articolele vin direct
-/// din ICartService (o singura colectie in-memory, partajata cu
-/// MenuViewModel/SearchViewModel prin AdaugaInCosCommand) - CartViewModel doar
-/// le afiseaza si recalculeaza costul total prin IOrderService de fiecare
-/// data cand se schimba cosul (ICartService.CosSchimbat).
-/// </summary>
+// Cosul clientului autentificat curent. Articolele vin din ICartService
+// (colectie in-memory partajata cu MenuViewModel/SearchViewModel) -
+// CartViewModel doar le afiseaza si recalculeaza costul via IOrderService.
 public partial class CartViewModel : ViewModelBase
 {
     private readonly IOrderService _orderService;
@@ -38,12 +34,12 @@ public partial class CartViewModel : ViewModelBase
     [ObservableProperty]
     private string? _mesajSucces;
 
-    /// <summary>Aceeasi colectie ca ICartService.Articole - modificarile din cos se reflecta direct aici.</summary>
+    // Aceeasi colectie ca ICartService.Articole - reflecta direct modificarile din cos.
     public ObservableCollection<ArticolCosDto> Articole => _cartService.Articole;
 
     public bool CosGol => Articole.Count == 0;
 
-    /// <summary>Se declanseaza dupa ce comanda a fost trimisa cu succes, cu codul unic al comenzii.</summary>
+    // Declansat dupa trimiterea cu succes a comenzii, cu codul ei unic.
     public event EventHandler<string>? ComandaCreataSucces;
 
     public CartViewModel() : this(new OrderService(), SessionService.Instance, CartService.Instance)

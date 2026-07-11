@@ -13,18 +13,9 @@ using Xunit;
 
 namespace RestaurantDataNaseGUI.test.Services;
 
-/// <summary>
-/// Teste unitare pentru OrderService, pe o baza SQLite in-memory (fara SQL
-/// Server real). Acopera doar caile de cod care nu ating
-/// StoredProcedureRepository - acesta apeleaza direct proceduri stocate
-/// T-SQL (EXEC dbo.sp_...) care nu exista pe SQLite, deci:
-///   - CreeazaComandaAsync (foloseste sp_CreateComanda prin ADO.NET direct,
-///     cu cast explicit la SqlConnection) si
-///   - SchimbaStareComandaAsync catre "se pregateste" (foloseste
-///     sp_UpdateCantitateTotalaLaComanda pentru actualizarea stocului)
-/// sunt testate impotriva SQL Server real, in Integration/OrderServiceIntegrationTests.cs.
-/// Aici testam doar tranzitii care NU trec prin "se pregateste".
-/// </summary>
+// Teste unitare pentru OrderService pe SQLite in-memory. Acopera doar caile care nu ating StoredProcedureRepository
+// (proceduri T-SQL inexistente pe SQLite): CreeazaComandaAsync (sp_CreateComanda) si SchimbaStareComandaAsync catre
+// "se pregateste" (sp_UpdateCantitateTotalaLaComanda) sunt testate cu SQL Server real, in Integration/OrderServiceIntegrationTests.cs.
 public sealed class OrderServiceTests : IDisposable
 {
     private readonly SqliteInMemoryDbContextFactory _dbFactory = new();

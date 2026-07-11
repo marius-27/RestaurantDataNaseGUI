@@ -11,44 +11,28 @@ using RestaurantDataNaseGUI.Models.DTOs;
 
 namespace RestaurantDataNaseGUI.Services;
 
-/// <summary>
-/// Implementare IOrderService. Toate pragurile/procentele de discount si
-/// transport se citesc din dbo.Configurare la fiecare calcul - niciodata
-/// hardcodate in cod (vezi CitesteConfigurareAsync). Regulile de business
-/// (vezi Services/README.md):
-///
-/// 1. Discount daca subtotalul > SumaMinimaComandaDiscount, SAU daca
-///    clientul are mai mult de NumarComenziPentruDiscount comenzi in
-///    ultimele IntervalTimpDiscount zile - in ambele cazuri se aplica
-///    acelasi procent, ProcentDiscountFrecventa (schema nu are un procent
-///    separat pentru "comanda mare"). Cele doua conditii NU se cumuleaza -
-///    daca ambele sunt indeplinite, discountul se aplica o singura data.
-/// 2. Cost transport CostTransport lei daca subtotalul e sub
-///    PragTransportGratuit, altfel transport gratuit.
-///
-/// Partea de angajat (vizualizare/schimbare stare comenzi) e in aceeasi
-/// clasa, nu intr-un serviciu separat: SchimbaStareComandaAsync verifica
-/// tranzitiile valide de stare (vezi TranzitiiValide) si, doar cand starea
-/// noua e "se pregateste", apeleaza
-/// StoredProcedureRepository.UpdateCantitateTotalaLaComandaAsync ca sa scada
-/// stocul - cerinta explicita ("la fiecare comanda pusa in pregatire se
-/// actualizeaza automat cantitatea totala din restaurant").
-/// </summary>
+// Implementare IOrderService. Pragurile/procentele de discount si transport
+// se citesc mereu din dbo.Configurare, niciodata hardcodate (vezi
+// CitesteConfigurareAsync). Reguli de business:
+// 1. Discount (ProcentDiscountFrecventa) daca subtotalul > SumaMinimaComandaDiscount
+//    SAU clientul are peste NumarComenziPentruDiscount comenzi in ultimele
+//    IntervalTimpDiscount zile - conditiile NU se cumuleaza.
+// 2. Transport CostTransport lei daca subtotalul e sub PragTransportGratuit, altfel gratuit.
+// Partea de angajat e in aceeasi clasa: SchimbaStareComandaAsync verifica
+// tranzitiile valide (TranzitiiValide) si, doar la "se pregateste", scade
+// stocul prin UpdateCantitateTotalaLaComandaAsync (cerinta explicita).
 public class OrderService : IOrderService
 {
-    /// <summary>Starile "finale" ale unei comenzi - nu mai poate fi urmarita ca activa sau anulata.</summary>
+    // Starile "finale" ale unei comenzi - nu mai poate fi activa sau anulata.
     private static readonly HashSet<string> StariFinale = new(StringComparer.OrdinalIgnoreCase)
     {
         "livrata",
         "anulata",
     };
 
-    /// <summary>
-    /// Tranzitiile valide de stare pentru o comanda: fluxul normal
-    /// inregistrata -> se pregateste -> a plecat la client -> livrata, plus
-    /// posibilitatea de a anula orice comanda activa. Orice alta tranzitie
-    /// (ex. direct din "inregistrata" in "livrata") e respinsa.
-    /// </summary>
+    // Tranzitii valide: fluxul normal inregistrata -> se pregateste -> a
+    // plecat la client -> livrata, plus anularea oricarei comenzi active.
+    // Orice alta tranzitie (ex. direct din "inregistrata" in "livrata") e respinsa.
     private static readonly Dictionary<string, string[]> TranzitiiValide = new(StringComparer.OrdinalIgnoreCase)
     {
         ["inregistrata"] = new[] { "se pregateste", "anulata" },

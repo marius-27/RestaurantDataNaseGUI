@@ -1,17 +1,13 @@
 namespace RestaurantDataNaseGUI.Models.DTOs.Reports;
 
-/// <summary>
-/// O linie din IReportService.RaportPreparateCelMaiVanduteAsync - un
-/// preparat sau meniu, cu cantitatea totala comandata in perioada (comenzile
-/// anulate sunt excluse). SumaIncasata e suma bruta a liniilor
-/// (Cantitate * PretUnitarLaComanda), fara a proratiza discountul aplicat la
-/// nivel de comanda intreaga - vezi README pentru justificare.
-/// </summary>
+// Linie din IReportService.RaportPreparateCelMaiVanduteAsync: preparat/meniu cu cantitatea
+// comandata in perioada (comenzi anulate excluse). SumaIncasata e bruta (Cantitate *
+// PretUnitarLaComanda), fara proratizarea discountului de comanda - vezi README.
 public class PreparatVandutDto
 {
     public string Denumire { get; set; } = string.Empty;
 
-    /// <summary>"Preparat" sau "Meniu".</summary>
+    // "Preparat" sau "Meniu".
     public string Tip { get; set; } = string.Empty;
 
     public string Categorie { get; set; } = string.Empty;

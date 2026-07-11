@@ -1,11 +1,7 @@
 namespace RestaurantDataNaseGUI.Models.DTOs.Reports;
 
-/// <summary>
-/// O linie din IReportService.RaportVanzariPeCategorieAsync - suma vanzarilor
-/// (comenzi anulate excluse) grupata pe categoria preparatelor/meniurilor
-/// comandate. SumaIncasata e bruta, fara proratizarea discountului de comanda
-/// - vezi README pentru justificare.
-/// </summary>
+// Linie din IReportService.RaportVanzariPeCategorieAsync: vanzari (fara cele anulate)
+// grupate pe categorie. SumaIncasata e bruta, fara proratizarea discountului - vezi README.
 public class VanzareCategorieDto
 {
     public string Categorie { get; set; } = string.Empty;

@@ -3,10 +3,8 @@ using System.Collections.Generic;
 
 namespace RestaurantDataNaseGUI.Models.DTOs;
 
-/// <summary>
-/// Model unificat pentru afisarea meniului restaurantului: reprezinta fie un
-/// Preparat individual, fie un Meniu compus - vezi <see cref="EsteMeniuCompus"/>.
-/// </summary>
+// Model unificat pentru afisare: Preparat individual sau Meniu compus -
+// vezi EsteMeniuCompus.
 public class MeniuAfisareDto
 {
     public int Id { get; set; }
@@ -14,24 +12,22 @@ public class MeniuAfisareDto
     public string Categorie { get; set; } = string.Empty;
     public decimal Pret { get; set; }
 
-    /// <summary>Cantitatea unei portii; null pentru meniuri compuse (nu au o singura portie).</summary>
+    // Cantitatea unei portii; null pentru meniuri compuse.
     public decimal? CantitatePortie { get; set; }
 
-    /// <summary>Unitatea de masura a portiei; null pentru meniuri compuse.</summary>
+    // Unitatea de masura a portiei; null pentru meniuri compuse.
     public string? UnitateMasura { get; set; }
 
     public IReadOnlyList<string> ListaAlergeni { get; set; } = Array.Empty<string>();
 
-    /// <summary>Caile catre imaginile preparatului; goala pentru meniuri compuse (Meniu nu are imagine proprie in schema).</summary>
+    // Caile imaginilor preparatului; goala pentru meniuri compuse (Meniu nu are imagine proprie).
     public IReadOnlyList<string> ListaImaginiPath { get; set; } = Array.Empty<string>();
 
-    /// <summary>True pentru un Meniu (compus din mai multe preparate), false pentru un Preparat individual.</summary>
+    // True pentru Meniu compus, false pentru Preparat individual.
     public bool EsteMeniuCompus { get; set; }
 
-    /// <summary>
-    /// True daca preparatul e marcat indisponibil, sau (pentru meniuri) daca
-    /// cel putin un preparat component e indisponibil.
-    /// </summary>
+    // True daca preparatul e indisponibil, sau (pentru meniuri) un component
+    // e indisponibil.
     public bool EsteIndisponibil { get; set; }
 
     public string? PrimaImaginePath => ListaImaginiPath.Count > 0 ? ListaImaginiPath[0] : null;

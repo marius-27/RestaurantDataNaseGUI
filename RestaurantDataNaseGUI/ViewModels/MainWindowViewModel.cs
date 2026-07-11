@@ -6,20 +6,11 @@ using RestaurantDataNaseGUI.ViewModels.Admin;
 
 namespace RestaurantDataNaseGUI.ViewModels;
 
-/// <summary>
-/// Shell-ul aplicatiei: tine minte ce ViewModel e afisat curent
-/// (<see cref="CurrentViewModel"/>, rezolvat la View-ul corespunzator prin
-/// ViewLocator, la fel ca restul proiectului) si expune comenzile de
-/// navigare din meniul lateral din MainWindow. Fiecare comanda de navigare
-/// creeaza o instanta noua a ViewModel-ului tinta (acelasi tipar ca
-/// View-urile deja existente, care se auto-incarca la Loaded), asa ca
-/// revenirea la un ecran ii reia datele de la zero.
-///
-/// Vizibilitatea optiunilor de meniu se leaga direct in XAML de
-/// <see cref="EsteAutentificat"/>/<see cref="EsteClient"/>/<see cref="EsteAngajat"/>
-/// (proprietati computed peste <see cref="ISessionService"/>), notificate
-/// automat la fiecare <see cref="ISessionService.CurrentUserChanged"/>.
-/// </summary>
+// Shell-ul aplicatiei: tine CurrentViewModel (rezolvat prin ViewLocator) si
+// comenzile de navigare din meniul lateral; fiecare comanda creeaza o
+// instanta noua a ViewModel-ului tinta, deci revenirea la un ecran ii reia
+// datele de la zero. Vizibilitatea optiunilor de meniu e legata de
+// EsteAutentificat/EsteClient/EsteAngajat, notificate la CurrentUserChanged.
 public partial class MainWindowViewModel : ViewModelBase
 {
     private readonly ISessionService _sessionService;

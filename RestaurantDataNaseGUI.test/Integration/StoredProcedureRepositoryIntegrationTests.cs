@@ -8,11 +8,7 @@ using Xunit;
 
 namespace RestaurantDataNaseGUI.test.Integration;
 
-/// <summary>
-/// Teste de integrare directe pentru StoredProcedureRepository (proceduri
-/// stocate T-SQL reale), impotriva unui SQL Server real - vezi
-/// RestaurantDataNaseGUI.test/README.md.
-/// </summary>
+// Teste de integrare pentru StoredProcedureRepository (proceduri stocate T-SQL reale), impotriva unui SQL Server real - vezi README.md.
 [Trait("Category", "Integration")]
 [Collection("Integration")]
 public sealed class StoredProcedureRepositoryIntegrationTests

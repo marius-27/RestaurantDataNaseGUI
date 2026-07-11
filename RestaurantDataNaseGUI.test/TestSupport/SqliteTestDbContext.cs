@@ -4,17 +4,9 @@ using RestaurantDataNaseGUI.Models;
 
 namespace RestaurantDataNaseGUI.test.TestSupport;
 
-/// <summary>
-/// Subclasa RestaurantDbContext folosita DOAR de testele unitare (SQLite
-/// in-memory) - RestaurantDbContext.cs din proiectul principal ramane
-/// neatins. Motiv: CK_Utilizator_TipUtilizator e definit in
-/// RestaurantDbContext cu sintaxa T-SQL "N'Client'"/"N'Angajat'" (prefixul N
-/// = literal Unicode in SQL Server) - SQLite nu recunoaste acest prefix si
-/// EnsureCreated() esueaza cu "near 'Client': syntax error" la CREATE TABLE.
-/// Redeclaram aici acelasi CHECK, cu sintaxa portabila (fara N) - identic
-/// din punct de vedere functional pe SQL Server, pentru cele doua valori
-/// ASCII simple ("Client"/"Angajat"), dar inteles si de SQLite.
-/// </summary>
+// Subclasa RestaurantDbContext, doar pentru testele SQLite in-memory. CK_Utilizator_TipUtilizator foloseste in
+// RestaurantDbContext sintaxa T-SQL "N'Client'" (literal Unicode), pe care SQLite nu o recunoaste, iar EnsureCreated() esueaza.
+// Redeclaram acelasi CHECK cu sintaxa portabila (fara N) - echivalent functional pentru cele doua valori ASCII.
 internal sealed class SqliteTestDbContext : RestaurantDbContext
 {
     public SqliteTestDbContext(DbContextOptions<RestaurantDbContext> options) : base(options)

@@ -1,28 +1,26 @@
 namespace RestaurantDataNaseGUI.Models.DTOs;
 
-/// <summary>Rezultatul calculului de cost al unei comenzi (vezi IOrderService.CalculeazaCostComandaAsync).</summary>
+// Rezultatul calculului de cost al unei comenzi (IOrderService.CalculeazaCostComandaAsync).
 public class CalculComandaDto
 {
-    /// <summary>Suma preparatelor/meniurilor din cos, inainte de discount si transport.</summary>
+    // Suma preparatelor/meniurilor din cos, fara discount/transport.
     public decimal SubtotalMancare { get; set; }
 
-    /// <summary>Procentul de discount aplicat (0 daca nu se aplica niciun discount).</summary>
+    // Procentul de discount aplicat (0 = fara discount).
     public decimal ProcentDiscount { get; set; }
 
-    /// <summary>Valoarea in lei a discountului (SubtotalMancare * ProcentDiscount / 100).</summary>
+    // Valoarea discountului in lei (SubtotalMancare * ProcentDiscount / 100).
     public decimal ValoareDiscount { get; set; }
 
-    /// <summary>
-    /// Motivul discountului aplicat (comanda mare, client frecvent, sau
-    /// ambele), pentru afisare - null daca ProcentDiscount e 0.
-    /// </summary>
+    // Motivul discountului (comanda mare/client frecvent/ambele), pentru
+    // afisare; null daca ProcentDiscount e 0.
     public string? MotivDiscount { get; set; }
 
     public decimal CostTransport { get; set; }
 
-    /// <summary>SubtotalMancare - ValoareDiscount + CostTransport.</summary>
+    // SubtotalMancare - ValoareDiscount + CostTransport.
     public decimal Total { get; set; }
 
-    /// <summary>True daca s-a aplicat vreun discount - util pentru IsVisible in XAML fara convertor.</summary>
+    // True daca exista discount; util pentru IsVisible in XAML fara convertor.
     public bool AreDiscount => ProcentDiscount > 0;
 }

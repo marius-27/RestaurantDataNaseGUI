@@ -12,13 +12,10 @@ using Xunit;
 
 namespace RestaurantDataNaseGUI.test.Integration;
 
-/// <summary>
-/// Completeaza Services/AdminServiceTests.cs cu scenariul care NU e
-/// testabil pe SQLite: StergePreparatAsync, cand preparatul a fost deja
-/// folosit intr-o comanda, apeleaza
-/// StoredProcedureRepository.SetPreparatIndisponibilAsync - "EXEC dbo.sp_SetPreparatIndisponibil",
-/// o procedura stocata T-SQL reala. Vezi nota din AdminServiceTests.cs.
-/// </summary>
+// Completeaza Services/AdminServiceTests.cs cu scenariul netestabil pe SQLite:
+// StergePreparatAsync, cand preparatul a fost deja folosit intr-o comanda,
+// apeleaza SetPreparatIndisponibilAsync ("EXEC dbo.sp_SetPreparatIndisponibil"),
+// o procedura stocata T-SQL reala. Vezi nota din AdminServiceTests.cs.
 [Trait("Category", "Integration")]
 [Collection("Integration")]
 public sealed class AdminServiceIntegrationTests

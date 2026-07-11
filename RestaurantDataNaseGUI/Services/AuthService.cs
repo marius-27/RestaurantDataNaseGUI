@@ -9,12 +9,9 @@ using RestaurantDataNaseGUI.Models;
 
 namespace RestaurantDataNaseGUI.Services;
 
-/// <summary>
-/// Implementare IAuthService peste RestaurantDbContext. Fiecare operatie
-/// deschide propriul DbContext scurt-traitor (via <see cref="_dbContextFactory"/>),
-/// la fel cum recomanda documentatia EF Core pentru aplicatii desktop -
-/// DbContext nu e thread-safe si nu trebuie tinut deschis pe durata rularii.
-/// </summary>
+// Implementare IAuthService peste RestaurantDbContext. Fiecare operatie deschide
+// propriul DbContext scurt-traitor (via _dbContextFactory), conform recomandarii EF
+// Core pentru desktop - DbContext nu e thread-safe si nu trebuie tinut deschis.
 public class AuthService : IAuthService
 {
     private const int LungimeMinimaParola = 8;

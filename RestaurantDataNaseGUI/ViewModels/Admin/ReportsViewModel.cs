@@ -11,14 +11,9 @@ using RestaurantDataNaseGUI.Services;
 
 namespace RestaurantDataNaseGUI.ViewModels.Admin;
 
-/// <summary>
-/// Generarea rapoartelor - doar pentru angajati autentificati (verificat de
-/// IReportService la fiecare apel). Rezultatul e tinut in patru colectii
-/// separate, cate una per tip de raport (nu o singura colectie cu "coloane
-/// dinamice") - fiecare tip de raport are propriile campuri, deci un
-/// DataTemplate tipizat per tip e mai simplu de legat in Avalonia decat un
-/// model generic de randuri/coloane.
-/// </summary>
+// Generarea rapoartelor, doar pentru angajati (verificat de IReportService).
+// Rezultatul e tinut in patru colectii separate, cate una per tip de raport,
+// ca fiecare sa aiba un DataTemplate tipizat in Avalonia.
 public partial class ReportsViewModel : ViewModelBase
 {
     private readonly IReportService _reportService;
@@ -49,7 +44,7 @@ public partial class ReportsViewModel : ViewModelBase
     [ObservableProperty]
     private DateTimeOffset? _dataEnd = DateTimeOffset.Now.Date;
 
-    /// <summary>Doar pentru raportul "Preparate cel mai vandute" - cate randuri se afiseaza.</summary>
+    // Numar de randuri afisate, doar la raportul "Preparate cel mai vandute".
     [ObservableProperty]
     private decimal _top = 10;
 
@@ -83,7 +78,7 @@ public partial class ReportsViewModel : ViewModelBase
     public bool AfiseazaCategorii => TipSelectat.Tip == TipRaport.VanzariPeCategorie;
     public bool AfiseazaStoc => TipSelectat.Tip == TipRaport.StocCurent;
 
-    /// <summary>Raportul de stoc curent nu are interval de date (e mereu "acum").</summary>
+    // Stocul curent nu are interval de date (e mereu "acum").
     public bool NecesitaInterval => TipSelectat.Tip != TipRaport.StocCurent;
 
     public bool NuAreRezultate => _aGeneratRaport && TipSelectat.Tip switch
@@ -271,7 +266,7 @@ public partial class ReportsViewModel : ViewModelBase
         }
     }
 
-    /// <summary>Escaping minim CSV: incadreaza in ghilimele daca valoarea contine virgula, ghilimele sau linie noua.</summary>
+    // Escaping minim CSV: ghilimele daca valoarea contine virgula, ghilimele sau linie noua.
     private static string EscapeCsv(string? valoare)
     {
         valoare ??= string.Empty;

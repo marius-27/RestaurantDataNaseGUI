@@ -9,19 +9,16 @@ using RestaurantDataNaseGUI.Services;
 
 namespace RestaurantDataNaseGUI.ViewModels;
 
-/// <summary>Cele doua tipuri de cautare in meniu suportate de SearchViewModel.</summary>
+// Tipurile de cautare in meniu suportate de SearchViewModel.
 public enum TipCautare
 {
     DupaDenumire,
     DupaAlergen,
 }
 
-/// <summary>
-/// Cauta in meniul restaurantului dupa denumire sau dupa alergen (cu negare -
-/// "contine" / "nu contine"). Nu depinde de autentificare pentru a functiona,
-/// la fel ca MenuViewModel - PoateComanda e folosit doar de template-ul de
-/// rezultate ca sa decida vizibilitatea butonului "Comanda".
-/// </summary>
+// Cauta in meniu dupa denumire sau alergen (cu negare "contine"/"nu contine").
+// Nu depinde de autentificare, la fel ca MenuViewModel - PoateComanda e
+// folosit doar de template-ul de rezultate pentru butonul "Comanda".
 public partial class SearchViewModel : ViewModelBase
 {
     private readonly IMenuService _menuService;
@@ -59,7 +56,7 @@ public partial class SearchViewModel : ViewModelBase
     [ObservableProperty]
     private string? _mesajNimicGasit;
 
-    /// <summary>Toggle bidirectional pentru "nu contine", complementul lui ContineAlergen.</summary>
+    // Complementul lui ContineAlergen (toggle "nu contine").
     public bool NuContineAlergen
     {
         get => !ContineAlergen;
@@ -90,7 +87,7 @@ public partial class SearchViewModel : ViewModelBase
         }
     }
 
-    /// <summary>True doar daca e autentificat un Client - decide vizibilitatea butonului "Comanda" in template-ul de rezultate.</summary>
+    // True doar daca e autentificat un Client - decide vizibilitatea butonului "Comanda".
     public bool PoateComanda => _sessionService.EsteAutentificat && _sessionService.EsteClient;
 
     public SearchViewModel() : this(new MenuService(), SessionService.Instance, CartService.Instance)
@@ -105,7 +102,7 @@ public partial class SearchViewModel : ViewModelBase
         _sessionService.CurrentUserChanged += (_, _) => OnPropertyChanged(nameof(PoateComanda));
     }
 
-    /// <summary>Adauga itemul in cos - nu face nimic daca userul curent nu poate comanda sau daca itemul e indisponibil.</summary>
+    // Adauga itemul in cos, doar daca userul poate comanda si itemul e disponibil.
     [RelayCommand]
     private void AdaugaInCos(MeniuAfisareDto? item)
     {

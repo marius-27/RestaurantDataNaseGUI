@@ -9,7 +9,7 @@ using RestaurantDataNaseGUI.Services;
 
 namespace RestaurantDataNaseGUI.ViewModels.Admin;
 
-/// <summary>CRUD Alergeni, doar pentru angajati.</summary>
+// CRUD Alergeni, doar pentru angajati.
 public partial class AlergenAdminViewModel : ViewModelBase
 {
     private readonly IAdminService _adminService;

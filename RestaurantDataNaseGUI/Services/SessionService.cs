@@ -3,13 +3,9 @@ using RestaurantDataNaseGUI.Models;
 
 namespace RestaurantDataNaseGUI.Services;
 
-/// <summary>
-/// Implementare in-memory a ISessionService. Proiectul nu are inca un
-/// container DI, asa ca <see cref="Instance"/> ofera un singleton simplu pe
-/// care orice ViewModel il poate folosi ca sa impartaseasca aceeasi sesiune;
-/// cand se introduce navigarea/DI (vezi Services/README.md), aceasta instanta
-/// se poate injecta in loc de folosit direct.
-/// </summary>
+// Implementare in-memory a ISessionService. Nu exista inca un container DI,
+// asa ca Instance e un singleton simplu, comun tuturor ViewModel-urilor;
+// cand se introduce DI, aceasta instanta se poate injecta in loc de folosit direct.
 public sealed class SessionService : ISessionService
 {
     public static SessionService Instance { get; } = new();

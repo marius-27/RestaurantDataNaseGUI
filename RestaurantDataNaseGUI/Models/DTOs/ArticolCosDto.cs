@@ -2,13 +2,9 @@ using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace RestaurantDataNaseGUI.Models.DTOs;
 
-/// <summary>
-/// Un articol din cosul de comanda, inainte de a fi trimis la DB. Trebuie sa
-/// aiba fie <see cref="PreparatId"/>, fie <see cref="MeniuId"/> completat -
-/// niciodata ambele si niciodata niciunul (aceeasi regula ca ComandaDetaliu).
-/// Observabil (CommunityToolkit) ca liniile din CartView (cantitate, subtotal)
-/// sa se actualizeze automat cand ICartService modifica un articol existent.
-/// </summary>
+// Articol din cos, inainte de trimitere la DB. Exact unul dintre
+// PreparatId/MeniuId trebuie completat (ca la ComandaDetaliu). Observabil
+// ca liniile din CartView sa se actualizeze automat.
 public partial class ArticolCosDto : ObservableObject
 {
     [ObservableProperty]
@@ -27,6 +23,6 @@ public partial class ArticolCosDto : ObservableObject
     [NotifyPropertyChangedFor(nameof(Subtotal))]
     private decimal _cantitate;
 
-    /// <summary>PretUnitar * Cantitate - pentru afisarea liniei din cos.</summary>
+    // PretUnitar * Cantitate, pentru linia din cos.
     public decimal Subtotal => PretUnitar * Cantitate;
 }

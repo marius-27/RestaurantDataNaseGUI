@@ -12,17 +12,12 @@ using Xunit;
 
 namespace RestaurantDataNaseGUI.test.Integration;
 
-/// <summary>
-/// Teste de integrare pentru OrderService, impotriva unui SQL Server real
-/// (vezi RestaurantDataNaseGUI.test/README.md pentru cum se configureaza).
-/// Acopera exact caile care ating StoredProcedureRepository (deci proceduri
-/// stocate T-SQL reale) - imposibil de testat cu SQLite/InMemory, vezi
-/// notele din Services/OrderServiceTests.cs.
-///
-/// Fiecare test isi creeaza propriile date (Categorie/Preparat/Utilizator cu
-/// nume unice, sufixate cu un Guid) si le sterge la final, ca sa nu lase
-/// reziduuri in baza de date folosita si de aplicatie in dezvoltare locala.
-/// </summary>
+// Teste de integrare pentru OrderService, impotriva unui SQL Server real
+// (vezi RestaurantDataNaseGUI.test/README.md). Acopera caile care ating
+// StoredProcedureRepository (proceduri T-SQL reale) - netestabil cu
+// SQLite/InMemory, vezi notele din Services/OrderServiceTests.cs.
+// Fiecare test isi creeaza date proprii (sufixate cu un Guid) si le sterge
+// la final, ca sa nu lase reziduuri in baza folosita si in dezvoltare locala.
 [Trait("Category", "Integration")]
 [Collection("Integration")]
 public sealed class OrderServiceIntegrationTests

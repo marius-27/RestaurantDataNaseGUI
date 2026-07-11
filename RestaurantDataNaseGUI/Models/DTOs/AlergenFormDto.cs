@@ -1,6 +1,6 @@
 namespace RestaurantDataNaseGUI.Models.DTOs;
 
-/// <summary>Datele unui formular de creare/editare Alergen. Id = 0 inseamna alergen nou.</summary>
+// Date formular creare/editare Alergen; Id = 0 = alergen nou.
 public class AlergenFormDto
 {
     public int Id { get; set; }

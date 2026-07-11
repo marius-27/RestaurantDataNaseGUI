@@ -1,9 +1,7 @@
 namespace RestaurantDataNaseGUI.Models;
 
-/// <summary>
-/// Entitate de legatura explicita pentru relatia many-to-many Meniu &lt;-&gt; Preparat,
-/// cu atributul propriu CantitateInMeniu. Cheie primara compusa (MeniuId, PreparatId).
-/// </summary>
+// Entitate de legatura many-to-many Meniu <-> Preparat, cu atributul propriu
+// CantitateInMeniu. Cheie primara compusa (MeniuId, PreparatId).
 public class MeniuPreparat
 {
     public int MeniuId { get; set; }

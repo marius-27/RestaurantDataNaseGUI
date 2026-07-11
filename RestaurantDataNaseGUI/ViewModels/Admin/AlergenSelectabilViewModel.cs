@@ -2,7 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace RestaurantDataNaseGUI.ViewModels.Admin;
 
-/// <summary>Alergen afisat ca CheckBox in PreparatAdminViewModel.</summary>
+// Alergen afisat ca CheckBox in PreparatAdminViewModel.
 public partial class AlergenSelectabilViewModel : ViewModelBase
 {
     public int AlergenId { get; }

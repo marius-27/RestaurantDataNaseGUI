@@ -6,12 +6,9 @@ using Avalonia.Media.Imaging;
 
 namespace RestaurantDataNaseGUI.Converters;
 
-/// <summary>
-/// Incarca un Bitmap dintr-o cale de fisier (PreparatImagine.CalePoza). Caile
-/// relative sunt rezolvate fata de directorul aplicatiei. Daca fisierul nu
-/// exista sau nu poate fi incarcat ca imagine, returneaza null - View-ul
-/// afiseaza un placeholder in acest caz, in loc sa arunce o exceptie.
-/// </summary>
+// Incarca un Bitmap din CalePoza (caile relative sunt fata de directorul
+// aplicatiei); returneaza null daca fisierul lipseste/e invalid, ca View-ul
+// sa afiseze un placeholder in loc sa arunce o exceptie.
 public class CaleImagineToBitmapConverter : IValueConverter
 {
     public static readonly CaleImagineToBitmapConverter Instance = new();

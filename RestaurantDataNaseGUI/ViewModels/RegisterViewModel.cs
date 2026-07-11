@@ -51,10 +51,10 @@ public partial class RegisterViewModel : ViewModelBase
     [NotifyCanExecuteChangedFor(nameof(RegisterCommand))]
     private bool _esteInCurs;
 
-    /// <summary>Se declanseaza dupa o inregistrare reusita (utilizatorul e deja autentificat).</summary>
+    // Declansat dupa inregistrare reusita (utilizatorul e deja autentificat).
     public event EventHandler<Utilizator>? InregistrareReusita;
 
-    /// <summary>Cerere de comutare catre ecranul de login.</summary>
+    // Cerere de comutare la ecranul de login.
     public event EventHandler? NavigheazaLaLoginRequested;
 
     public RegisterViewModel() : this(new AuthService(), SessionService.Instance)

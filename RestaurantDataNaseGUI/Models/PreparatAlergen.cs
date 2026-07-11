@@ -1,9 +1,6 @@
 namespace RestaurantDataNaseGUI.Models;
 
-/// <summary>
-/// Entitate de legatura explicita pentru relatia many-to-many Preparat &lt;-&gt; Alergen.
-/// Cheie primara compusa (PreparatId, AlergenId).
-/// </summary>
+// Entitate de legatura many-to-many Preparat <-> Alergen. Cheie primara compusa (PreparatId, AlergenId).
 public class PreparatAlergen
 {
     public int PreparatId { get; set; }

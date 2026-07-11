@@ -20,7 +20,7 @@ seteaza direct `CurrentViewModel = new XyzViewModel()`.
 `<ContentControl Content="{Binding CurrentViewModel}"/>`. `ViewLocator`
 (inregistrat in `App.axaml` ca `Application.DataTemplates`) e cel care
 transforma automat orice `ViewModelBase` in View-ul lui corespunzator (dupa
-convenția deja existenta in proiect: namespace/sufix `ViewModel` -> acelasi
+conventia deja existenta in proiect: namespace/sufix `ViewModel` -> acelasi
 namespace/sufix `View`, ex. `ViewModels.Admin.ReportsViewModel` ->
 `Views.Admin.ReportsView`) - `MainWindowViewModel` nu stie nimic despre
 View-uri, doar despre ViewModel-uri.

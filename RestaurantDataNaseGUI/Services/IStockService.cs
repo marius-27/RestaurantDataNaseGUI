@@ -5,13 +5,10 @@ using RestaurantDataNaseGUI.Models.DTOs;
 
 namespace RestaurantDataNaseGUI.Services;
 
-/// <summary>Vizualizarea stocului aproape de epuizare - doar pentru angajati autentificati.</summary>
+// Vizualizarea stocului aproape de epuizare - doar pentru angajati autentificati.
 public interface IStockService
 {
-    /// <summary>
-    /// Preparatele cu stoc sub pragul din dbo.Configurare (cheia
-    /// PragStocEpuizare) - doar pentru angajati autentificati (arunca
-    /// UnauthorizedAccessException altfel).
-    /// </summary>
+    // Preparatele cu stoc sub pragul din dbo.Configurare (PragStocEpuizare) -
+    // doar pentru angajati autentificati (altfel arunca UnauthorizedAccessException).
     Task<List<PreparatEpuizareDto>> GetPreparateApropiateDeEpuizareAsync(CancellationToken cancellationToken = default);
 }

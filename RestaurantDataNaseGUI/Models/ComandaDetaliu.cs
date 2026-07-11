@@ -1,10 +1,7 @@
 namespace RestaurantDataNaseGUI.Models;
 
-/// <summary>
-/// O linie de comanda. Se refera fie la un Preparat, fie la un Meniu -
-/// niciodata la ambele si niciodata la niciunul (vezi
-/// CK_ComandaDetaliu_PreparatSauMeniu din schema.sql).
-/// </summary>
+// O linie de comanda: fie Preparat, fie Meniu - niciodata ambele, niciodata
+// niciunul (CK_ComandaDetaliu_PreparatSauMeniu).
 public class ComandaDetaliu
 {
     public int Id { get; set; }
@@ -13,7 +10,7 @@ public class ComandaDetaliu
     public int? MeniuId { get; set; }
     public decimal Cantitate { get; set; }
 
-    /// <summary>Snapshot istoric al pretului la momentul plasarii comenzii.</summary>
+    // Pretul la momentul plasarii comenzii (snapshot istoric).
     public decimal PretUnitarLaComanda { get; set; }
 
     public Comanda Comanda { get; set; } = null!;

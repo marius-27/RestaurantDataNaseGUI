@@ -1,6 +1,6 @@
 namespace RestaurantDataNaseGUI.Services;
 
-/// <summary>Rezultatul unei operatii de administrare (Create/Update/Delete) din IAdminService.</summary>
+// Rezultatul unei operatii de administrare (Create/Update/Delete) din IAdminService.
 public sealed class AdminResult
 {
     public bool Succes { get; }

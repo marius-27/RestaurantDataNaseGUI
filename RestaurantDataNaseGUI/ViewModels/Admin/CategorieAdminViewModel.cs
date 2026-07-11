@@ -9,7 +9,7 @@ using RestaurantDataNaseGUI.Services;
 
 namespace RestaurantDataNaseGUI.ViewModels.Admin;
 
-/// <summary>CRUD pentru Categorie, accesibil doar angajatilor (verificat de IAdminService).</summary>
+// CRUD Categorie, doar pentru angajati (verificat de IAdminService).
 public partial class CategorieAdminViewModel : ViewModelBase
 {
     private readonly IAdminService _adminService;
@@ -33,7 +33,7 @@ public partial class CategorieAdminViewModel : ViewModelBase
 
     public bool EsteEditare => IdInEditare > 0;
 
-    /// <summary>Pentru un shell viitor, care sa decida daca arata acest ecran doar angajatilor.</summary>
+    // Pentru un shell viitor, care decide daca arata ecranul doar angajatilor.
     public bool PoateAdministra => _sessionService.EsteAngajat;
 
     public CategorieAdminViewModel() : this(new AdminService(), SessionService.Instance)

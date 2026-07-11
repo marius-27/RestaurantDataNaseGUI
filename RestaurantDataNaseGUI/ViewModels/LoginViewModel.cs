@@ -25,10 +25,10 @@ public partial class LoginViewModel : ViewModelBase
     [NotifyCanExecuteChangedFor(nameof(LoginCommand))]
     private bool _esteInCurs;
 
-    /// <summary>Se declanseaza dupa un login reusit, ca sa poata naviga un shell viitor.</summary>
+    // Declansat dupa login reusit, pentru navigare intr-un shell viitor.
     public event EventHandler<Utilizator>? LoginReusit;
 
-    /// <summary>Cerere de comutare catre ecranul de inregistrare.</summary>
+    // Cerere de comutare la ecranul de inregistrare.
     public event EventHandler? NavigheazaLaInregistrareRequested;
 
     public LoginViewModel() : this(new AuthService(), SessionService.Instance)

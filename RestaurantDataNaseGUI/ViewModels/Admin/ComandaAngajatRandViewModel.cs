@@ -6,11 +6,7 @@ using RestaurantDataNaseGUI.Models.DTOs;
 
 namespace RestaurantDataNaseGUI.ViewModels.Admin;
 
-/// <summary>
-/// Un rand din ToateComenzileView: comanda (datele complete, inclusiv
-/// clientul) + starea aleasa in dropdown-ul de tranzitie, dintre starile
-/// urmatoare valide pentru starea ei curenta.
-/// </summary>
+// Un rand din ToateComenzileView: comanda completa + starea aleasa in dropdown, dintre starile urmatoare valide.
 public partial class ComandaAngajatRandViewModel : ViewModelBase
 {
     public ComandaAngajatDto Comanda { get; }

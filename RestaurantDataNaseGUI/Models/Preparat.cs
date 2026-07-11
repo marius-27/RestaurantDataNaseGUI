@@ -9,18 +9,16 @@ public class Preparat
     public decimal Pret { get; set; }
     public decimal CantitatePortie { get; set; }
 
-    /// <summary>Unitatea de masura a portiei si a stocului, ex: "g", "ml", "buc".</summary>
+    // Unitatea de masura a portiei si a stocului, ex: "g", "ml", "buc".
     public string UnitateMasura { get; set; } = string.Empty;
 
-    /// <summary>Stocul curent, in aceeasi unitate de masura ca <see cref="UnitateMasura"/>.</summary>
+    // Stocul curent, in aceeasi unitate de masura ca UnitateMasura.
     public decimal CantitateTotalaRestaurant { get; set; }
 
     public int CategorieId { get; set; }
 
-    /// <summary>
-    /// Soft-delete: un preparat folosit deja intr-o comanda nu se sterge fizic,
-    /// ci se marcheaza indisponibil (vezi dbo.sp_SetPreparatIndisponibil).
-    /// </summary>
+    // Soft-delete: preparat deja folosit intr-o comanda nu se sterge fizic,
+    // ci se marcheaza indisponibil (vezi dbo.sp_SetPreparatIndisponibil).
     public bool Disponibil { get; set; } = true;
 
     public Categorie Categorie { get; set; } = null!;

@@ -6,12 +6,8 @@ using RestaurantDataNaseGUI.ViewModels;
 
 namespace RestaurantDataNaseGUI.Converters;
 
-/// <summary>
-/// Combina articolul din cos (valoarea binding-ului, un ArticolCosDto) cu un
-/// delta fix dat prin ConverterParameter (ex. "1" sau "-1") intr-un
-/// ModificaCantitateParametru pentru CartViewModel.ModificaCantitateCommand -
-/// folosit de butoanele +/- din CartView.
-/// </summary>
+// Combina ArticolCosDto (binding) cu delta din ConverterParameter intr-un
+// ModificaCantitateParametru, pentru butoanele +/- din CartView.
 public class ArticolSiDeltaCantitateConverter : IValueConverter
 {
     public static readonly ArticolSiDeltaCantitateConverter Instance = new();

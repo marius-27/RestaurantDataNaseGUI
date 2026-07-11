@@ -11,16 +11,12 @@ using RestaurantDataNaseGUI.Models.DTOs;
 
 namespace RestaurantDataNaseGUI.Services;
 
-/// <summary>
-/// Implementare IMenuService. Preparatele individuale se citesc/filtreaza
-/// direct prin EF Core LINQ (parametrizat automat de provider). Meniurile
-/// compuse se citesc prin StoredProcedureRepository.GetMeniuRestaurantCuAlergeniAsync
-/// (procedura stocata dbo.sp_GetMeniuRestaurantCuAlergeni), care da pretul
-/// calculat dinamic (dbo.fn_CalculeazaPretMeniu) si alergenii agregati din
-/// toate preparatele componente; procedura nu are parametri de filtrare, deci
-/// cautarea pe meniuri se aplica in memorie, dupa materializare - nu prin
-/// concatenare de SQL.
-/// </summary>
+// Implementare IMenuService. Preparatele individuale se citesc/filtreaza
+// direct prin EF Core LINQ. Meniurile compuse vin prin
+// GetMeniuRestaurantCuAlergeniAsync (sp_GetMeniuRestaurantCuAlergeni), care
+// da pretul calculat dinamic si alergenii agregati din preparatele
+// componente; procedura nu are parametri de filtrare, deci cautarea pe
+// meniuri se aplica in memorie, dupa materializare.
 public class MenuService : IMenuService
 {
     private readonly Func<RestaurantDbContext> _dbContextFactory;

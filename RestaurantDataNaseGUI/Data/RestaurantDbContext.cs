@@ -4,12 +4,8 @@ using RestaurantDataNaseGUI.Models.DTOs;
 
 namespace RestaurantDataNaseGUI.Data;
 
-/// <summary>
-/// DbContext care mapeaza pe schema deja existenta in database/schema.sql
-/// ("Database First" fara migrations). Baza de date trebuie creata rulind
-/// acel script - acest DbContext NU o creeaza si NU trebuie folosit niciodata
-/// cu Database.Migrate() sau Database.EnsureCreated().
-/// </summary>
+// Database First pe schema.sql existenta, fara migrations - NU folosi
+// Database.Migrate()/EnsureCreated(), baza se creeaza doar cu scriptul.
 public class RestaurantDbContext : DbContext
 {
     public RestaurantDbContext(DbContextOptions<RestaurantDbContext> options)
